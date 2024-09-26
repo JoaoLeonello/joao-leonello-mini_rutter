@@ -1,0 +1,45 @@
+version: '3.8'
+
+services:
+  # Serviço Node.js
+  node:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: node_ts_app
+    ports:
+      - "3000:3000"  # Mapear a porta 3000 do container para a porta 3000 no host
+    volumes:
+      - ./src:/usr/src/app/src
+      - /usr/src/app/node_modules
+    environment:
+      - NODE_ENV=development
+    depends_on:
+      - mysql
+    networks:
+      - mynetwork
+
+  # Serviço MySQL
+  mysql:
+    image: mysql:8.0  # Usar a versão LTS do MySQL
+    container_name: mysql_db
+    environment:
+      MYSQL_ROOT_PASSWORD: root_password
+      MYSQL_DATABASE: my_database
+      MYSQL_USER: user
+      MYSQL_PASSWORD: user_password
+    ports:
+      - "3306:3306"  # Porta do MySQL
+    volumes:
+      - dbdata:/var/lib/mysql  # Persistir dados do banco de dados
+    networks:
+      - mynetwork
+
+# Definir uma rede para os containers se comunicarem
+networks:
+  mynetwork:
+    driver: bridge
+
+# Persistência dos dados do MySQL
+volumes:
+  dbdata:
