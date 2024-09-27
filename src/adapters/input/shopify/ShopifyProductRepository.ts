@@ -4,18 +4,18 @@ import { ShopifyPort } from "../../../ports/input/ShopifyPort";
 import { shopifyApi } from "./dto/ShopifyProductRequest";
 
 export class ShopifyProductRepository implements ShopifyPort {
-  private shopifyUrl: string = "https://shopify.api/products";
+  private shopifyUrl: string = "/products.json";
 
   async *fetchProductsInBatches(): AsyncGenerator<Product[]> {
     let nextPageUrl: string | null = this.shopifyUrl;
 
     while (nextPageUrl) {
       let productsBatch: Product[] = [];
-      const response = await shopifyApi.get(nextPageUrl);
+      const response: any = await shopifyApi.get(nextPageUrl);
 
       //  Mapping response to domain entity
       productsBatch = response.data.products.map((productData: any) => 
-        new Product(productData.GENERATE_ID, productData.id, productData.title)
+        new Product(undefined, productData.id, productData.title)
       );
 
       // Verify header link

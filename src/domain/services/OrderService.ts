@@ -1,11 +1,10 @@
-import { Order } from '../entities/Order';
-import { OrderRepository } from '../ports/OrderRepository';
+// import { OrderRepository } from '../ports/OrderRepos';
 
 export class OrderService {
-  constructor(private orderRepository: OrderRepository) {}
+  // constructor(private orderRepository: OrderRepository) {}
 
-  async fetchAndStoreOrders(orders: Order[]): Promise<void> {
-    // Lógica de persistência de pedidos
-    await this.orderRepository.saveOrders(orders);
-  }
+  // async fetchAndStoreOrders(orders: Order[]): Promise<void> {
+  //   // Lógica de persistência de pedidos
+  //   await this.orderRepository.saveOrders(orders);
+  // }
 }

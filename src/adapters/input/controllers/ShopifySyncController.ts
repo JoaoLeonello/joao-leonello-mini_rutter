@@ -1,14 +1,17 @@
 import { Response } from 'express';
 import { Controller, Get } from 'routing-controllers';
-import { SyncOrdersUseCase } from '../../../usecases/SyncOrdersUseCase';
+// import { SyncOrdersUseCase } from '../../../usecases/SyncOrdersUseCase';
+import { inject, injectable } from 'tsyringe';
 import { SyncProductsUseCase } from '../../../usecases/SyncProductsUseCase';
 
-
+@injectable()
 @Controller('/sync')
 export class ShopifySyncController {
+    
+
     constructor(
-      private syncProductsUseCase: SyncProductsUseCase,
-      private syncOrdersUseCase: SyncOrdersUseCase
+      @inject('SyncProductsUseCase') private syncProductsUseCase: SyncProductsUseCase
+      // @Inject(SyncOrdersUseCaseToken) private syncOrdersUseCase: SyncOrdersUseCase
     ) {}
   
     @Get('/products')
@@ -16,8 +19,8 @@ export class ShopifySyncController {
       let test = this.syncProductsUseCase.execute();
     }
   
-    @Get('/orders')
-    async fetchAndStoreOrders(_: Response) {
-      let test = this.syncOrdersUseCase.execute();
-    }
+    // @Get('/orders')
+    // async fetchAndStoreOrders(_: Response) {
+    //   let test = this.syncOrdersUseCase.execute();
+    // }
   }

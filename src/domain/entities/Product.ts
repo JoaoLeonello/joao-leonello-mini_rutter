@@ -1,4 +1,4 @@
-// src/domain/entities/Product.ts
+import { v4 as uuidv4 } from 'uuid';
 
 export class Product {
   // Propriedades da entidade de domínio
@@ -6,13 +6,12 @@ export class Product {
   private _platformId: string;
   private _name: string;
 
-  constructor(id: string, platformId: string, name: string) {
+  constructor(id: string = uuidv4(), platformId: string, name: string) {
     this._id = id;
     this._platformId = platformId;
     this._name = name;
   }
 
-  // Getters para acessar as propriedades
   get id(): string {
     return this._id;
   }
@@ -25,10 +24,7 @@ export class Product {
     return this._name;
   }
 
-  // Métodos de domínio (exemplo de lógica de negócios)
   updateName(newName: string): void {
     this._name = newName;
   }
-
-  // Outros métodos que podem ser adicionados conforme a necessidade do domínio
 }
