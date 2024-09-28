@@ -12,10 +12,10 @@ export class SyncProductsUseCaseImpl implements SyncProductsUseCase {
     @inject('OutputPort') private outputPort: OutputPort
   ) {}
 
-  async execute() {
+  async *execute(): AsyncGenerator<Product[]> {
     // Loop for processing batch return from the generator function
     for await (const productsBatch of this.inputPort.fetchProductsInBatches()) {
-      await this.storeProducts(productsBatch);
+      yield await this.storeProducts(productsBatch);
     }
   }
 

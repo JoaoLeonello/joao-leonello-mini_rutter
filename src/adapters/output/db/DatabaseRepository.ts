@@ -1,4 +1,4 @@
-import { Repository } from 'typeorm';
+import { EntityManager, Repository } from 'typeorm';
 import { AppDataSource } from '../../../config/typeOrmConfig';
 import { Product as DomainProduct } from '../../../domain/entities/Product';
 import { OutputPort } from "../../../ports/output/OutputPort";
@@ -13,15 +13,18 @@ export class DatabaseRepository implements OutputPort {
     }
 
     async storeProducts(domainProducts: DomainProduct[]): Promise<DomainProduct[]> {
-        // Convert domain entities to db entities
-        const dbProducts = domainProducts.map(domainProduct => {
-            const dbProduct = new DbProduct(domainProduct.id, domainProduct.platformId, domainProduct.name);
-            return dbProduct;
-        });
+        // Transaction to ensure atomic processing
+        return await AppDataSource.transaction(async (entityManager: EntityManager) => {
+            // Convert domain entities to db entities
+            const dbProducts = domainProducts.map(domainProduct => {
+                const dbProduct = new DbProduct(domainProduct.id, domainProduct.platformId, domainProduct.name);
+                return dbProduct;
+            });
 
-        const savedProducts = await this.repository.save(dbProducts);
+            const savedProducts = await entityManager.save(dbProducts);
 
-        // Convert return db entities to domain entities again
-        return savedProducts.map(sp => new DomainProduct(sp.id, sp.platform_id, sp.name));
+            // Convert return db entities to domain entities again
+            return savedProducts.map(sp => new DomainProduct(sp.id, sp.platform_id, sp.name));
+        })        
     }
 }

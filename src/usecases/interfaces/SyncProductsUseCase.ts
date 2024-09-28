@@ -1,3 +1,5 @@
+import { Product } from "../../domain/entities/Product";
+
 export interface SyncProductsUseCase {
-  execute(): Promise<void>;
+  execute(): AsyncGenerator<Product[] | undefined>;
 }
