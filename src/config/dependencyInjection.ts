@@ -1,22 +1,22 @@
 import { container } from 'tsyringe';
 import { ShopifyProductRepository } from '../adapters/input/shopify/ShopifyProductRepository';
 import { DatabaseRepository } from '../adapters/output/db/DatabaseRepository';
-import { ProductService } from '../domain/services/ProductService';
-import { ShopifyPort } from '../ports/input/ShopifyPort';
-import { DatabasePort } from '../ports/output/DatabasePort';
-import { SyncProductsUseCase } from '../usecases/SyncProductsUseCase';
+import { InputPort } from '../ports/input/InputPort';
+import { OutputPort } from '../ports/output/OutputPort';
+import { SyncProductsUseCase } from '../usecases/interfaces/SyncProductsUseCase';
+import { SyncProductsUseCaseImpl } from '../usecases/SyncProductsUseCaseImpl';
 
 export function setupDependencyInjection() {
     // Registrar as dependências no container do tsyringe
-    container.register<ShopifyPort>('ShopifyPort', {
+    container.register<InputPort>('InputPort', {
         useClass: ShopifyProductRepository
     });
 
-    container.register<DatabasePort>('DatabasePort', {
+    container.register<OutputPort>('OutputPort', {
         useClass: DatabaseRepository
     });
 
     container.register<SyncProductsUseCase>('SyncProductsUseCase', {
-        useClass: ProductService
+        useClass: SyncProductsUseCaseImpl
     });
 }
