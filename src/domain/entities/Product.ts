@@ -1,7 +1,6 @@
 import { v4 as uuidv4 } from 'uuid';
 
 export class Product {
-  // Propriedades da entidade de domínio
   private _id: string;
   private _platformId: string;
   private _name: string;

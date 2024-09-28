@@ -8,13 +8,19 @@
       "skipLibCheck": true,            
       "forceConsistentCasingInFileNames": true,
       "experimentalDecorators": true,
-      "emitDecoratorMetadata": true
+      "emitDecoratorMetadata": true,
+      "baseUrl": "./src", 
+      "paths": {
+        "@src/*": ["src/*"],
+        "@entities/*": ["adapters/output/db/entities/*"]
+      }
     },
     "include": [
       "src/**/*"   
     ],
     "exclude": [
-      "node_modules" 
+      "node_modules",
+      "dist"
     ]
   }
   

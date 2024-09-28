@@ -1,5 +1,5 @@
 import { Product } from "../../domain/entities/Product";
 
-export interface ShopifyPort {
+export interface InputPort {
   fetchProductsInBatches(): AsyncGenerator<Product[]>;
 }

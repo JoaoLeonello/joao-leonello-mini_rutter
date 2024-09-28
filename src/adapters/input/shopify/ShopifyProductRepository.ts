@@ -1,9 +1,9 @@
 
 import { Product } from "../../../domain/entities/Product";
-import { ShopifyPort } from "../../../ports/input/ShopifyPort";
+import { InputPort } from "../../../ports/input/InputPort";
 import { shopifyApi } from "./dto/ShopifyProductRequest";
 
-export class ShopifyProductRepository implements ShopifyPort {
+export class ShopifyProductRepository implements InputPort {
   private shopifyUrl: string = "/products.json";
 
   async *fetchProductsInBatches(): AsyncGenerator<Product[]> {

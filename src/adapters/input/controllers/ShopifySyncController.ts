@@ -2,7 +2,7 @@ import { Response } from 'express';
 import { Controller, Get } from 'routing-controllers';
 // import { SyncOrdersUseCase } from '../../../usecases/SyncOrdersUseCase';
 import { inject, injectable } from 'tsyringe';
-import { SyncProductsUseCase } from '../../../usecases/SyncProductsUseCase';
+import { SyncProductsUseCase } from '../../../usecases/interfaces/SyncProductsUseCase';
 
 @injectable()
 @Controller('/sync')
