@@ -1,30 +1,42 @@
-import { EntityManager, Repository } from 'typeorm';
+import { EntityManager } from 'typeorm';
 import { AppDataSource } from '../../../config/typeOrmConfig';
-import { Product as DomainProduct } from '../../../domain/entities/Product';
 import { OutputPort } from "../../../ports/output/OutputPort";
-import { Product as DbProduct } from "./entities/Product";
+import { ShopifyProductDTO } from '../../input/shopify/dto/ShopifyProductDTO';
+import { ShopifyProduct } from './entities/ShopifyProduct';
 
 
 export class DatabaseRepository implements OutputPort {
-    private repository: Repository<DbProduct>;
+    async storeProducts(shopifyProductBatch: ShopifyProductDTO[]): Promise<void> {
+        try {
+            let shopifyProductDbBatch: ShopifyProduct[] = this.mapShopifyProductDTOToShopifyProduct(shopifyProductBatch);
 
-    constructor() {
-        this.repository = AppDataSource.getRepository(DbProduct);
+            // Transaction to ensure atomic processing
+            return await AppDataSource.transaction(async (entityManager: EntityManager) => {
+                await entityManager.save(shopifyProductDbBatch);
+            })        
+        } catch (error) {
+            console.error("Error on saving products:", error);
+            throw new Error("Error on saving products on database.");
+        }
     }
 
-    async storeProducts(domainProducts: DomainProduct[]): Promise<DomainProduct[]> {
-        // Transaction to ensure atomic processing
-        return await AppDataSource.transaction(async (entityManager: EntityManager) => {
-            // Convert domain entities to db entities
-            const dbProducts = domainProducts.map(domainProduct => {
-                const dbProduct = new DbProduct(domainProduct.id, domainProduct.platformId, domainProduct.name);
-                return dbProduct;
-            });
-
-            const savedProducts = await entityManager.save(dbProducts);
-
-            // Convert return db entities to domain entities again
-            return savedProducts.map(sp => new DomainProduct(sp.id, sp.platform_id, sp.name));
-        })        
+    mapShopifyProductDTOToShopifyProduct(shopifyProductBatch: ShopifyProductDTO[]) {
+        return shopifyProductBatch.map(dto => {
+            return new ShopifyProduct(
+                dto.id,
+                dto.title,
+                dto.body_html,
+                dto.vendor,
+                dto.product_type,
+                new Date(dto.created_at),
+                new Date(dto.updated_at),
+                dto.status,
+                dto.published_at ? new Date(dto.published_at) : null,
+                null, // template_suffix não está presente no DTO
+                null, // published_scope não está presente no DTO
+                dto.tags,
+                dto.admin_graphql_api_id
+            );
+        });
     }
 }

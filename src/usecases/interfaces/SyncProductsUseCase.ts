@@ -1,5 +1,4 @@
-import { Product } from "../../domain/entities/Product";
 
 export interface SyncProductsUseCase {
-  execute(): AsyncGenerator<Product[] | undefined>;
+  execute(): AsyncGenerator<void | undefined>;
 }

@@ -1,6 +1,6 @@
 import { Column, Entity, ManyToOne, PrimaryGeneratedColumn } from 'typeorm';
-import { Order } from './Order';
-import { Product } from './Product';
+import { ShopifyOrder } from './ShopifyOrder';
+import { ShopifyProduct } from './ShopifyProduct';
 
 @Entity('line_item')
 export class LineItem {
@@ -10,13 +10,13 @@ export class LineItem {
     @Column({ nullable: true })
     product_id: string;
 
-    @ManyToOne(() => Product, { nullable: true })
-    product: Product;
+    @ManyToOne(() => ShopifyProduct, { nullable: true })
+    product: ShopifyProduct;
 
-    @ManyToOne(() => Order, (order) => order.line_items)
-    order: Order;
+    @ManyToOne(() => ShopifyOrder, (shopifyOrder) => shopifyOrder.line_items)
+    order: ShopifyOrder;
 
-    constructor(product_id: string, product: Product, order: Order) {
+    constructor(product_id: string, product: ShopifyProduct, order: ShopifyOrder) {
         this.product_id = product_id;
         this.product = product;
         this.order = order;

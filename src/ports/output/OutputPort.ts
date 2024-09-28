@@ -1,6 +1,6 @@
 // import { Product as DbProduct } from "../../adapters/output/db/entities/Product";
-import { Product as DomainProduct } from "../../domain/entities/Product";
+import { ShopifyProductDTO } from "../../adapters/input/shopify/dto/ShopifyProductDTO";
 
 export interface OutputPort {
-    storeProducts(products: DomainProduct[]): Promise<DomainProduct[]>;
+    storeProducts(products: ShopifyProductDTO[]): Promise<void>;
 }

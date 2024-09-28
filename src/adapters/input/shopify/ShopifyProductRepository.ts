@@ -1,22 +1,20 @@
 
-import { Product } from "../../../domain/entities/Product";
 import { InputPort } from "../../../ports/input/InputPort";
+import { ShopifyProductDTO } from "./dto/ShopifyProductDTO";
 import { shopifyApi } from "./dto/ShopifyProductRequest";
 
 export class ShopifyProductRepository implements InputPort {
   private shopifyUrl: string = "/products.json";
 
-  async *fetchProductsInBatches(): AsyncGenerator<Product[]> {
+  async *fetchProductsInBatches(): AsyncGenerator<ShopifyProductDTO[]> {
     let nextPageUrl: string | null = this.shopifyUrl;
 
     while (nextPageUrl) {
-      let productsBatch: Product[] = [];
+      let productsBatch: ShopifyProductDTO[] = [];
       const response: any = await shopifyApi.get(nextPageUrl);
 
-      //  Mapping response to domain entity
-      productsBatch = response.data.products.map((productData: any) => 
-        new Product(undefined, productData.id, productData.title)
-      );
+      // Populate with data from Shopify API
+      productsBatch = response.data.products as ShopifyProductDTO[];
 
       // Verify header link
       const linkHeader = response.headers['link'];
