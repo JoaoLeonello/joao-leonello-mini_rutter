@@ -1,10 +1,10 @@
 
-import { InputPort } from "../../../ports/input/InputPort";
+import { ShopifyInputPort } from "../../../ports/input/InputPort";
 import { ShopifyOrderDTO } from "./dto/ShopifyOrderDTO";
 import { ShopifyProductDTO } from "./dto/ShopifyProductDTO";
 import { shopifyApi } from "./dto/ShopifyProductRequest";
 
-export class ShopifyRepository implements InputPort {
+export class ShopifyRepository implements ShopifyInputPort {
   private shopifyProductUrl: string = "/products.json";
   private shopifyOrderUrl: string = "/orders.json";
   private totalOrdersFetched = 0;

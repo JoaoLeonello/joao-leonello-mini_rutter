@@ -1,6 +1,6 @@
 import { inject, injectable } from 'tsyringe';
 import { ShopifyProductDTO } from '../adapters/input/shopify/dto/ShopifyProductDTO';
-import { InputPort } from '../ports/input/InputPort';
+import { ShopifyInputPort } from '../ports/input/InputPort';
 import { OutputPort } from '../ports/output/OutputPort';
 import { SyncProductsUseCase } from '../usecases/interfaces/SyncProductsUseCase';
 
@@ -8,7 +8,7 @@ import { SyncProductsUseCase } from '../usecases/interfaces/SyncProductsUseCase'
 export class SyncProductsUseCaseImpl implements SyncProductsUseCase {
   
   constructor(
-    @inject('InputPort') private inputPort: InputPort,
+    @inject('ShopifyInputPort') private inputPort: ShopifyInputPort,
     @inject('OutputPort') private outputPort: OutputPort
   ) {}
 

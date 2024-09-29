@@ -4,7 +4,7 @@ import { SyncOrdersUseCase } from '../../../usecases/interfaces/SyncOrdersUseCas
 import { SyncProductsUseCase } from '../../../usecases/interfaces/SyncProductsUseCase';
 
 @injectable()
-@Controller('/sync')
+@Controller('/v1/sync')
 export class ShopifySyncController {
     
 

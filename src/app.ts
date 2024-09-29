@@ -1,6 +1,7 @@
 import 'reflect-metadata';
 import { createExpressServer, useContainer } from 'routing-controllers';
 import { container } from 'tsyringe'; // Importa o container do tsyringe
+import { MiniRutterController } from './adapters/input/controllers/MiniRutterController';
 import { ShopifySyncController } from './adapters/input/controllers/ShopifySyncController';
 import { setupDependencyInjection } from './config/dependencyInjection';
 import { TsyringeAdapter } from './config/tsyringeAdapter';
@@ -17,7 +18,7 @@ if (!AppDataSource.isInitialized) {
   .then(() => {
       console.log('Data Source has been initialized!');
       const app = createExpressServer({
-        controllers: [ShopifySyncController],
+        controllers: [ShopifySyncController, MiniRutterController],
       });
 
       app.listen(3000, () => {

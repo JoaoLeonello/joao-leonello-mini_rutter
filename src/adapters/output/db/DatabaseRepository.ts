@@ -1,5 +1,6 @@
 import { EntityManager } from 'typeorm';
 import { AppDataSource } from '../../../config/typeOrmConfig';
+import { Product } from '../../../domain/entities/Product';
 import { OutputPort } from "../../../ports/output/OutputPort";
 import { ShopifyOrderDTO } from '../../input/shopify/dto/ShopifyOrderDTO';
 import { ShopifyProductDTO } from '../../input/shopify/dto/ShopifyProductDTO';
@@ -133,6 +134,27 @@ export class DatabaseRepository implements OutputPort {
                 dto.checkout_id,
                 dto.checkout_token ? dto.checkout_token : null,  
                 lineItems 
+            );
+        });
+    }
+
+    async getProducts(): Promise<Product[]> {
+        try {
+            const productEntities = await AppDataSource.manager.find(ShopifyProduct);
+    
+            return this.mapPersistenceEntitytoDomain(productEntities);
+        } catch (error) {
+            console.error("Error fetching products:", error);
+            throw new Error("Error fetching products from the database.");
+        }
+    }
+
+    mapPersistenceEntitytoDomain(productEntities: ShopifyProduct[]): Product[] {
+        return productEntities.map(productEntity => {
+            return new Product(
+                productEntity.id,
+                productEntity.platform_id.toString(),
+                productEntity.title
             );
         });
     }
