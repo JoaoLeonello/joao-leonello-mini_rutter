@@ -1,9 +1,12 @@
-import { Column, Entity, PrimaryColumn } from 'typeorm';
+import { Column, Entity, PrimaryGeneratedColumn } from 'typeorm';
 
 @Entity('shopify_product')
 export class ShopifyProduct {
-    @PrimaryColumn({ type: 'bigint' })
-    id!: number;
+    @PrimaryGeneratedColumn('uuid') 
+    id!: string;
+
+    @Column({ type: 'bigint', unique: true })
+    platform_id!: number;
 
     @Column({ type: 'varchar', length: 255 })
     title!: string;
@@ -42,7 +45,7 @@ export class ShopifyProduct {
     admin_graphql_api_id!: string | null;
 
     constructor(
-        id: number,
+        platform_id: number,
         title: string,
         body_html: string | null,
         vendor: string | null,
@@ -56,7 +59,7 @@ export class ShopifyProduct {
         tags: string | null = null,
         admin_graphql_api_id: string | null = null
     ) {
-        this.id = id;
+        this.platform_id = platform_id;
         this.title = title;
         this.body_html = body_html;
         this.vendor = vendor;

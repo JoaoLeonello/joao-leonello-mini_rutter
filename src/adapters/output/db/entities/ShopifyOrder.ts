@@ -1,10 +1,13 @@
-import { Column, Entity, OneToMany, PrimaryColumn } from 'typeorm';
+import { Column, Entity, OneToMany, PrimaryGeneratedColumn } from 'typeorm';
 import { LineItem } from './LineItem';
 
 @Entity('shopify_order')
 export class ShopifyOrder {
-    @PrimaryColumn({ type: 'bigint' })
-    id!: number;
+    @PrimaryGeneratedColumn('uuid') 
+    id!: string;
+
+    @Column({ type: 'bigint', unique: true })
+    platform_id!: number;
 
     @Column({ type: 'varchar', length: 255 })
     admin_graphql_api_id!: string;
@@ -30,8 +33,8 @@ export class ShopifyOrder {
     @Column({ type: 'bigint' })
     checkout_id!: number;
 
-    @Column({ type: 'varchar', length: 255 })
-    checkout_token!: string;
+    @Column({ type: 'varchar', length: 255, nullable: true }) // Marcar como nullable se não for obrigatório
+    checkout_token!: string | null;  // O erro estava aqui, garanta que um valor seja passado ou permitido ser null
 
     @Column({ type: 'varchar', length: 255 })
     confirmation_number!: string;
@@ -121,7 +124,7 @@ export class ShopifyOrder {
     line_items!: LineItem[];
 
     constructor(
-        id: number,
+        platform_id: number,
         admin_graphql_api_id: string,
         buyer_accepts_marketing: boolean,
         confirmation_number: string,
@@ -146,9 +149,12 @@ export class ShopifyOrder {
         total_price: string,
         total_tax: string,
         user_id: number | null = null,
-        updated_at: Date | null = null
+        updated_at: Date | null = null,
+        checkout_id: number,
+        checkout_token: string | null, 
+        line_items: LineItem[]
     ) {
-        this.id = id;
+        this.platform_id = platform_id;
         this.admin_graphql_api_id = admin_graphql_api_id;
         this.buyer_accepts_marketing = buyer_accepts_marketing;
         this.confirmation_number = confirmation_number;
@@ -174,5 +180,8 @@ export class ShopifyOrder {
         this.total_tax = total_tax;
         this.user_id = user_id;
         this.updated_at = updated_at;
+        this.checkout_id = checkout_id;
+        this.checkout_token = checkout_token; 
+        this.line_items = line_items;
     }
 }

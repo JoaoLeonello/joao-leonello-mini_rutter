@@ -1,3 +1,3 @@
 export interface SyncOrdersUseCase {
-    execute(): Promise<void>;
+  execute(): AsyncGenerator<void | undefined>;
   }
