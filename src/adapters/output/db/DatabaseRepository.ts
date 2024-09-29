@@ -15,7 +15,18 @@ export class DatabaseRepository implements OutputPort {
 
             // Transaction to ensure atomic processing
             return await AppDataSource.transaction(async (entityManager: EntityManager) => {
-                await entityManager.save(shopifyProductDbBatch);
+                for (let product of shopifyProductDbBatch) {
+                    await entityManager
+                        .createQueryBuilder()
+                        .insert()
+                        .into(ShopifyProduct)
+                        .values(product)
+                        .orUpdate({
+                            conflict_target: ['platform_id'],  
+                            overwrite: ['title', 'body_html', 'vendor', 'product_type', 'created_at', 'updated_at', 'published_at', 'template_suffix', 'published_scope', 'tags', 'status', 'admin_graphql_api_id']
+                        })
+                        .execute();
+                }
             })        
         } catch (error) {
             console.error("Error on saving products:", error);
@@ -63,7 +74,16 @@ export class DatabaseRepository implements OutputPort {
                     }
     
                     // Salvar order with the correct mapping
-                    await entityManager.save(order);
+                    await entityManager
+                        .createQueryBuilder()
+                        .insert()
+                        .into(ShopifyOrder)
+                        .values(order)
+                        .orUpdate({
+                            conflict_target: ['platform_id'],
+                            overwrite: ['admin_graphql_api_id', 'buyer_accepts_marketing', 'confirmation_number', 'confirmed', 'created_at', 'currency', 'current_subtotal_price', 'current_total_price', 'current_total_tax', 'customer_locale', 'financial_status', 'name', 'order_number', 'presentment_currency', 'processed_at', 'source_name', 'subtotal_price', 'tags', 'tax_exempt', 'total_discounts', 'total_line_items_price', 'total_price', 'total_tax', 'updated_at', 'checkout_id', 'checkout_token'] // Campos a serem atualizados
+                        })
+                        .execute();
                 }
             })        
         } catch (error) {
