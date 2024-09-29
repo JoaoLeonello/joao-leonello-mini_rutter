@@ -69,7 +69,6 @@ export class CreateProductsAndOrders1633500000000 implements MigrationInterface 
             true
         );
 
-        // Criar tabela 'shopify_order'
         await queryRunner.createTable(
             new Table({
                 name: 'shopify_order',
@@ -183,7 +182,6 @@ export class CreateProductsAndOrders1633500000000 implements MigrationInterface 
             true
         );
 
-        // Criar tabela 'line_item'
         await queryRunner.createTable(
             new Table({
                 name: 'line_item',
@@ -204,15 +202,13 @@ export class CreateProductsAndOrders1633500000000 implements MigrationInterface 
                     },
                     {
                         name: 'order_id',
-                        type: 'char',
-                        length: '36',
+                        type: 'bigint',
                     },
                 ],
             }),
             true
         );
 
-        // Criar chaves estrangeiras
         await queryRunner.createForeignKey(
             'line_item',
             new TableForeignKey({
