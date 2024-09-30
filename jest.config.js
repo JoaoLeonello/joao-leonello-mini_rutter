@@ -7,6 +7,7 @@ module.exports = {
     },
     testMatch: ['**/tests/**/*.test.ts'], // Define o padrão de busca dos testes
     collectCoverage: true,
+    setupFiles: ['reflect-metadata'],
     coverageDirectory: 'coverage',
     coverageReporters: ['text', 'lcov'],
   };

@@ -38,13 +38,11 @@ describe('MiniRutterController', () => {
 
       const result = await controller.getProducts(null as any);
 
-      // Verificando o resultado
       expect(result).toEqual(products);
       expect(mockGetProductsUseCase.execute).toHaveBeenCalledTimes(1);
     });
 
-    it('deve lançar HttpError 500 em caso de erro', async () => {
-      // Simulando erro no caso de uso
+    it('should throw 500 on error', async () => {
       mockGetProductsUseCase.execute.mockRejectedValue(new Error('Erro no caso de uso'));
 
       await expect(controller.getProducts(null as any)).rejects.toThrow(HttpError);
@@ -53,24 +51,20 @@ describe('MiniRutterController', () => {
   });
 
   describe('getOrders', () => {
-    it('deve retornar uma lista de pedidos', async () => {
-      // Mock do retorno esperado
+    it('should return orders list', async () => {
       const orders: Order[] = [
         new Order('1', undefined, undefined),
         new Order('2', undefined, undefined)
       ];
       mockGetOrdersUseCase.execute.mockResolvedValue(orders);
 
-      // Chamando o método do controller
       const result = await controller.getOrders(null as any);
 
-      // Verificando o resultado
       expect(result).toEqual(orders);
       expect(mockGetOrdersUseCase.execute).toHaveBeenCalledTimes(1);
     });
 
-    it('deve lançar HttpError 500 em caso de erro', async () => {
-      // Simulando erro no caso de uso
+    it('should throw 500 on error', async () => {
       mockGetOrdersUseCase.execute.mockRejectedValue(new Error('Erro no caso de uso'));
 
       await expect(controller.getOrders(null as any)).rejects.toThrow(HttpError);

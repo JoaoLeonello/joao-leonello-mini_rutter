@@ -18,13 +18,8 @@ export class ShopifySyncController {
         try {
             const results = [];
             
-            // Iterarate over AsyncGenerator
             for await (const batch of this.syncProductsUseCase.execute()) {
-                results.push(batch);  // Armazenar cada batch processado
-            }
-            
-            if (results.length === 0) {
-                throw new HttpError(404, 'No products found or processed.');
+                results.push(batch);  
             }
     
             return {
@@ -41,14 +36,9 @@ export class ShopifySyncController {
     async fetchAndStoreOrders(_: Response) {
         try {
             const results = [];
-            
-            // Iterarate over AsyncGenerator
+
             for await (const batch of this.syncOrdersUseCase.execute()) {
                 results.push(batch);
-            }
-            
-            if (results.length === 0) {
-                throw new HttpError(404, 'No orders found or processed.');
             }
     
             return {
