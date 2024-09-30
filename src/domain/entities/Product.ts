@@ -1,7 +1,7 @@
 import { v4 as uuidv4 } from 'uuid';
 
 export class Product {
-  private _id: string;
+  private _id!: string;
   private _platformId: string;
   private _name: string;
 
@@ -21,9 +21,5 @@ export class Product {
 
   get name(): string {
     return this._name;
-  }
-
-  updateName(newName: string): void {
-    this._name = newName;
   }
 }
