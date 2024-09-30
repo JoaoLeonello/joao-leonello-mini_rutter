@@ -9,7 +9,8 @@ module.exports = {
       '**/src/adapters/input/controllers/tests/**/*.test.ts',
       '**/src/adapters/input/shopify/tests/**/*.test.ts',
       '**/src/adapters/output/db/tests/**/*.test.ts',
-      '**/src/domain/entities/tests/**/*.test.ts'
+      '**/src/domain/entities/tests/**/*.test.ts',
+      '**/src/usecases/tests/**/*.test.ts'
     ],
     collectCoverage: true,
     setupFiles: ['reflect-metadata'],
