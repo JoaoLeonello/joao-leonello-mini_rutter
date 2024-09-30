@@ -120,20 +120,19 @@ export class ShopifyOrder {
     @Column({ type: 'bigint', nullable: true })
     user_id!: number | undefined;
 
-    // @OneToMany(() => LineItem, (lineItem) => lineItem.order, { cascade: true })
     @ManyToMany(() => ShopifyProduct, (shopifyProduct) => shopifyProduct.line_items, { cascade: true })
     @JoinTable({
         name: 'line_items', 
         joinColumn: {
             name: 'order_id', 
-            referencedColumnName: 'id'
+            referencedColumnName: 'platform_id'
         },
         inverseJoinColumn: {
             name: 'product_id',
             referencedColumnName: 'platform_id'
         }
     })
-    line_items!: ShopifyProduct[] | undefined;
+    line_items!: (ShopifyProduct | undefined | null)[];
 
     constructor(
         platform_id?: number,

@@ -1,4 +1,4 @@
-import { MigrationInterface, QueryRunner, Table } from 'typeorm';
+import { MigrationInterface, QueryRunner, Table, TableForeignKey } from 'typeorm';
 
 export class CreateProductsAndOrders1633500000000 implements MigrationInterface {
     public async up(queryRunner: QueryRunner): Promise<void> {
@@ -91,7 +91,6 @@ export class CreateProductsAndOrders1633500000000 implements MigrationInterface 
             }),
             true
         );
-        
 
         await queryRunner.createTable(
             new Table({
@@ -329,58 +328,42 @@ export class CreateProductsAndOrders1633500000000 implements MigrationInterface 
             }),
             true
         );
-        
 
-        // await queryRunner.createTable(
-        //     new Table({
-        //         name: 'line_item',
-        //         columns: [
-        //             {
-        //                 name: 'id',
-        //                 type: 'char',
-        //                 length: '36',
-        //                 isPrimary: true,
-        //                 isGenerated: true,
-        //                 generationStrategy: 'uuid',
-        //             },
-        //             {
-        //                 name: 'product_id',
-        //                 type: 'char',
-        //                 length: '36',
-        //                 isNullable: true,
-        //             },
-        //             {
-        //                 name: 'order_id',
-        //                 type: 'char',
-        //                 length: '36',
-        //             },
-        //         ],
-        //     }),
-        //     true
-        // );
-        
-        // await queryRunner.createForeignKey(
-        //     'line_item',
-        //     new TableForeignKey({
-        //         columnNames: ['product_id'],
-        //         referencedColumnNames: ['id'],
-        //         referencedTableName: 'shopify_product',
-        //         onDelete: 'CASCADE',
-        //     })
-        // );
-        
-        // await queryRunner.createForeignKey(
-        //     'line_item',
-        //     new TableForeignKey({
-        //         columnNames: ['order_id'],
-        //         referencedColumnNames: ['id'],
-        //         referencedTableName: 'shopify_order',
-        //         onDelete: 'CASCADE',
-        //     })
-        // );
+        await queryRunner.createTable(
+            new Table({
+                name: 'line_items',
+                columns: [
+                    {
+                        name: 'order_id',
+                        type: 'bigint',
+                    },
+                    {
+                        name: 'product_id',
+                        type: 'bigint',
+                    }
+                ],
+            }),
+            true
+        );
+
+        await queryRunner.createForeignKey('line_items', new TableForeignKey({
+            columnNames: ['order_id'],
+            referencedColumnNames: ['platform_id'],
+            referencedTableName: 'shopify_order',
+            onDelete: 'CASCADE',
+        }));
+
+        await queryRunner.createForeignKey('line_items', new TableForeignKey({
+            columnNames: ['product_id'],
+            referencedColumnNames: ['platform_id'],
+            referencedTableName: 'shopify_product',
+            onDelete: 'CASCADE',
+        }));
     }
 
     public async down(queryRunner: QueryRunner): Promise<void> {
-        
+        await queryRunner.dropTable('line_items');
+        await queryRunner.dropTable('shopify_order');
+        await queryRunner.dropTable('shopify_product');
     }
 }

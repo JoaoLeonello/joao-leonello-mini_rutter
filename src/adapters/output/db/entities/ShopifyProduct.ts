@@ -48,7 +48,6 @@ export class ShopifyProduct {
     @Column({ type: 'varchar', length: 255, nullable: true })
     admin_graphql_api_id!: string | null;
 
-    // @OneToMany(() => LineItem, (lineItem) => lineItem.product)
     @ManyToMany(() => ShopifyOrder, (shopifyOrder) => shopifyOrder.line_items)
     line_items!: ShopifyOrder[];
 

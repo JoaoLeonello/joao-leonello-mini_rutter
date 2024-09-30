@@ -89,14 +89,23 @@ export class DatabaseRepository implements OutputPort {
                     shopifyOrder.checkout_id = dto.checkout_id;
                     shopifyOrder.checkout_token = dto.checkout_token ? dto.checkout_token : undefined;
 
-                    const products = await entityManager.findBy(ShopifyProduct, {
+                    const productMap = await entityManager.findBy(ShopifyProduct, {
                         platform_id: In(dto.line_items.map(item => item.product_id))
                     });
 
-                   
-                    shopifyOrder.line_items = products;
+                    // Mapeie os `line_items` e associe o produto correto para cada item
+                    shopifyOrder.line_items = dto.line_items.map(item => {
+                        // Encontre o produto correto para cada `line_item`
+                        const product = productMap.find(prod => prod.platform_id === item.product_id);
+                        
+                        // Se o produto for encontrado, retorna o produto. Caso contrário, retorna `null` ou trata como necessário
+                        return product || null;
+                    });
 
-                    await entityManager.upsert(ShopifyOrder, shopifyOrder, ['platform_id']);
+                   
+                    // shopifyOrder.line_items = productMap;
+
+                    await entityManager.save(shopifyOrder);
                 }
             });
         } catch (error) {
@@ -138,11 +147,13 @@ export class DatabaseRepository implements OutputPort {
                 order.id,
                 (order.platform_id ?? '').toString(),
                 order.line_items ? 
-                order.line_items.map(lineItem => {
-                    return new DomainLineItem(
-                        lineItem.id ? lineItem.id : undefined
-                    );
-                }) : [new DomainLineItem()]
+                order.line_items
+                    .filter(lineItem => lineItem) 
+                    .map(lineItem => {
+                        return new DomainLineItem(
+                            lineItem!.id ? lineItem!.id : undefined
+                        );
+                    }) : [new DomainLineItem()]
             );
         });
     }

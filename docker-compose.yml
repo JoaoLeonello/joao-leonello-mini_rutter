@@ -1,7 +1,6 @@
 version: '3.8'
 
 services:
-  # Serviço Node.js
   node:
     build:
       context: .
@@ -20,27 +19,24 @@ services:
     networks:
       - mynetwork
 
-  # Serviço MySQL
   mysql:
-    image: mysql:8.0  # Usar a versão LTS do MySQL
+    image: mysql:8.0  
     container_name: mysql_db
     environment:
-      MYSQL_ROOT_PASSWORD: root_password
-      MYSQL_DATABASE: my_database
+      MYSQL_ROOT_PASSWORD: root
+      MYSQL_DATABASE: rutter
       MYSQL_USER: user
       MYSQL_PASSWORD: user_password
     ports:
-      - "3306:3306"  # Porta do MySQL
+      - "3306:3306"  
     volumes:
-      - dbdata:/var/lib/mysql  # Persistir dados do banco de dados
+      - dbdata:/var/lib/mysql  
     networks:
       - mynetwork
 
-# Definir uma rede para os containers se comunicarem
 networks:
   mynetwork:
     driver: bridge
 
-# Persistência dos dados do MySQL
 volumes:
   dbdata:

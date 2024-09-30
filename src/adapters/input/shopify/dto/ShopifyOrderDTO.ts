@@ -79,7 +79,7 @@ export class ShopifyOrderDTO {
     public customer: string | null,
     public discount_applications: any[],
     public fulfillments: any[],
-    public line_items: LineItemDTO[],
+    public line_items: LineItemDTO[] ,
     public payment_terms: PaymentTermsDTO | null,
     public refunds: any[],
     public shipping_address: string | null,
