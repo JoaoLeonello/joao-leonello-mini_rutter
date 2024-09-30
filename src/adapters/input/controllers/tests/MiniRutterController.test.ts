@@ -6,7 +6,6 @@ import { GetOrdersUseCaseImpl } from '../../../../usecases/GetOrdersUseCaseImpl'
 import { GetProductsUseCaseImpl } from '../../../../usecases/GetProductsUseCaseImpl';
 import { MiniRutterController } from '../MiniRutterController';
 
-// Mock dos casos de uso
 const mockGetProductsUseCase = {
   execute: jest.fn(),
 };
