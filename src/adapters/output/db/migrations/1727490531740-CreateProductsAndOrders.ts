@@ -17,10 +17,12 @@ export class CreateProductsAndOrders1633500000000 implements MigrationInterface 
                     {
                         name: 'platform_id',
                         type: 'bigint',
+                        isUnique: true
                     },
                     {
                         name: 'title',
                         type: 'varchar',
+                        length: '255',
                     },
                     {
                         name: 'body_html',
@@ -30,11 +32,13 @@ export class CreateProductsAndOrders1633500000000 implements MigrationInterface 
                     {
                         name: 'vendor',
                         type: 'varchar',
+                        length: '255',
                         isNullable: true,
                     },
                     {
                         name: 'product_type',
                         type: 'varchar',
+                        length: '255',
                         isNullable: true,
                     },
                     {
@@ -46,28 +50,48 @@ export class CreateProductsAndOrders1633500000000 implements MigrationInterface 
                         type: 'timestamp',
                     },
                     {
-                        name: 'status',
-                        type: 'varchar',
-                    },
-                    {
                         name: 'published_at',
                         type: 'timestamp',
                         isNullable: true,
                     },
                     {
-                        name: 'tags',
+                        name: 'status',
                         type: 'varchar',
+                        length: '255',
+                    },
+                    {
+                        name: 'handle',
+                        type: 'varchar',
+                        length: '255',
+                    },
+                    {
+                        name: 'tags',
+                        type: 'text',
                         isNullable: true,
                     },
                     {
                         name: 'published_scope',
                         type: 'varchar',
+                        length: '255',
+                        isNullable: true,
+                    },
+                    {
+                        name: 'template_suffix',
+                        type: 'varchar',
+                        length: '255',
+                        isNullable: true,
+                    },
+                    {
+                        name: 'admin_graphql_api_id',
+                        type: 'varchar',
+                        length: '255',
                         isNullable: true,
                     },
                 ],
             }),
             true
         );
+        
 
         await queryRunner.createTable(
             new Table({
@@ -75,12 +99,21 @@ export class CreateProductsAndOrders1633500000000 implements MigrationInterface 
                 columns: [
                     {
                         name: 'id',
-                        type: 'bigint',
+                        type: 'char',
+                        length: '36',
                         isPrimary: true,
+                        isGenerated: true,
+                        generationStrategy: 'uuid',
+                    },
+                    {
+                        name: 'platform_id',
+                        type: 'bigint',
+                        isUnique: true
                     },
                     {
                         name: 'admin_graphql_api_id',
                         type: 'varchar',
+                        length: '255',
                     },
                     {
                         name: 'app_id',
@@ -90,6 +123,7 @@ export class CreateProductsAndOrders1633500000000 implements MigrationInterface 
                     {
                         name: 'browser_ip',
                         type: 'varchar',
+                        length: '255',
                         isNullable: true,
                     },
                     {
@@ -97,8 +131,36 @@ export class CreateProductsAndOrders1633500000000 implements MigrationInterface 
                         type: 'boolean',
                     },
                     {
+                        name: 'cancel_reason',
+                        type: 'varchar',
+                        length: '255',
+                        isNullable: true,
+                    },
+                    {
+                        name: 'cancelled_at',
+                        type: 'timestamp',
+                        isNullable: true,
+                    },
+                    {
+                        name: 'cart_token',
+                        type: 'varchar',
+                        length: '255',
+                        isNullable: true,
+                    },
+                    {
+                        name: 'checkout_id',
+                        type: 'bigint',
+                    },
+                    {
+                        name: 'checkout_token',
+                        type: 'varchar',
+                        length: '255',
+                        isNullable: true,
+                    },
+                    {
                         name: 'confirmation_number',
                         type: 'varchar',
+                        length: '255',
                     },
                     {
                         name: 'confirmed',
@@ -111,46 +173,92 @@ export class CreateProductsAndOrders1633500000000 implements MigrationInterface 
                     {
                         name: 'currency',
                         type: 'varchar',
+                        length: '10',
                     },
                     {
                         name: 'current_subtotal_price',
-                        type: 'varchar',
+                        type: 'decimal',
+                        precision: 10,
+                        scale: 2,
                     },
                     {
                         name: 'current_total_price',
-                        type: 'varchar',
+                        type: 'decimal',
+                        precision: 10,
+                        scale: 2,
                     },
                     {
                         name: 'current_total_tax',
-                        type: 'varchar',
+                        type: 'decimal',
+                        precision: 10,
+                        scale: 2,
                     },
                     {
                         name: 'customer_locale',
                         type: 'varchar',
+                        length: '10',
                     },
                     {
                         name: 'financial_status',
                         type: 'varchar',
+                        length: '255',
+                    },
+                    {
+                        name: 'fulfillment_status',
+                        type: 'varchar',
+                        length: '255',
+                        isNullable: true,
+                    },
+                    {
+                        name: 'landing_site',
+                        type: 'varchar',
+                        length: '255',
+                        isNullable: true,
                     },
                     {
                         name: 'name',
                         type: 'varchar',
+                        length: '255',
                     },
                     {
                         name: 'order_number',
                         type: 'int',
                     },
                     {
+                        name: 'presentment_currency',
+                        type: 'varchar',
+                        length: '10',
+                    },
+                    {
                         name: 'processed_at',
                         type: 'timestamp',
                     },
                     {
-                        name: 'subtotal_price',
+                        name: 'reference',
                         type: 'varchar',
+                        length: '255',
+                        isNullable: true,
+                    },
+                    {
+                        name: 'referring_site',
+                        type: 'varchar',
+                        length: '255',
+                        isNullable: true,
+                    },
+                    {
+                        name: 'source_name',
+                        type: 'varchar',
+                        length: '255',
+                    },
+                    {
+                        name: 'subtotal_price',
+                        type: 'decimal',
+                        precision: 10,
+                        scale: 2,
                     },
                     {
                         name: 'tags',
-                        type: 'varchar',
+                        type: 'text',
                     },
                     {
                         name: 'tax_exempt',
@@ -158,29 +266,70 @@ export class CreateProductsAndOrders1633500000000 implements MigrationInterface 
                     },
                     {
                         name: 'total_discounts',
-                        type: 'varchar',
+                        type: 'decimal',
+                        precision: 10,
+                        scale: 2,
                     },
                     {
                         name: 'total_line_items_price',
-                        type: 'varchar',
+                        type: 'decimal',
+                        precision: 10,
+                        scale: 2,
                     },
                     {
                         name: 'total_price',
-                        type: 'varchar',
+                        type: 'decimal',
+                        precision: 10,
+                        scale: 2,
                     },
                     {
                         name: 'total_tax',
-                        type: 'varchar',
+                        type: 'decimal',
+                        precision: 10,
+                        scale: 2,
+                    },
+                    {
+                        name: 'total_tip_received',
+                        type: 'decimal',
+                        precision: 10,
+                        scale: 2,
+                        isNullable: true,
                     },
                     {
                         name: 'updated_at',
                         type: 'timestamp',
                         isNullable: true,
                     },
+                    {
+                        name: 'user_id',
+                        type: 'bigint',
+                        isNullable: true,
+                    },
+                    {
+                        name: 'payment_gateway_names',
+                        type: 'text',
+                        isNullable: true,
+                    },
+                    {
+                        name: 'total_discounts_set',
+                        type: 'text',
+                        isNullable: true,
+                    },
+                    {
+                        name: 'total_price_set',
+                        type: 'text',
+                        isNullable: true,
+                    },
+                    {
+                        name: 'total_tax_set',
+                        type: 'text',
+                        isNullable: true,
+                    },
                 ],
             }),
             true
         );
+        
 
         await queryRunner.createTable(
             new Table({
@@ -202,13 +351,14 @@ export class CreateProductsAndOrders1633500000000 implements MigrationInterface 
                     },
                     {
                         name: 'order_id',
-                        type: 'bigint',
+                        type: 'char',
+                        length: '36',
                     },
                 ],
             }),
             true
         );
-
+        
         await queryRunner.createForeignKey(
             'line_item',
             new TableForeignKey({
@@ -218,7 +368,7 @@ export class CreateProductsAndOrders1633500000000 implements MigrationInterface 
                 onDelete: 'CASCADE',
             })
         );
-
+        
         await queryRunner.createForeignKey(
             'line_item',
             new TableForeignKey({
@@ -231,17 +381,6 @@ export class CreateProductsAndOrders1633500000000 implements MigrationInterface 
     }
 
     public async down(queryRunner: QueryRunner): Promise<void> {
-        const lineItemTable = await queryRunner.getTable('line_item');
-        if (lineItemTable) {
-            const foreignKeyOrder = lineItemTable.foreignKeys.find(fk => fk.columnNames.indexOf('order_id') !== -1);
-            if (foreignKeyOrder) await queryRunner.dropForeignKey('line_item', foreignKeyOrder);
-
-            const foreignKeyProduct = lineItemTable.foreignKeys.find(fk => fk.columnNames.indexOf('product_id') !== -1);
-            if (foreignKeyProduct) await queryRunner.dropForeignKey('line_item', foreignKeyProduct);
-        }
-
-        await queryRunner.dropTable('line_item');
-        await queryRunner.dropTable('shopify_order');
-        await queryRunner.dropTable('shopify_product');
+        
     }
 }

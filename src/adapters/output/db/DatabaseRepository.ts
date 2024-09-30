@@ -1,11 +1,11 @@
-import { EntityManager } from 'typeorm';
+import { EntityManager, In } from 'typeorm';
 import { AppDataSource } from '../../../config/typeOrmConfig';
 import { LineItem as DomainLineItem, Order } from '../../../domain/entities/Order';
 import { Product } from '../../../domain/entities/Product';
 import { OutputPort } from "../../../ports/output/OutputPort";
 import { ShopifyOrderDTO } from '../../input/shopify/dto/ShopifyOrderDTO';
 import { ShopifyProductDTO } from '../../input/shopify/dto/ShopifyProductDTO';
-import { LineItem as DbLineItem } from './entities/LineItem';
+import { LineItem as EntityLineItem } from './entities/LineItem';
 import { ShopifyOrder } from './entities/ShopifyOrder';
 import { ShopifyProduct } from './entities/ShopifyProduct';
 
@@ -18,16 +18,7 @@ export class DatabaseRepository implements OutputPort {
             // Transaction to ensure atomic processing
             return await AppDataSource.transaction(async (entityManager: EntityManager) => {
                 for (let product of shopifyProductDbBatch) {
-                    await entityManager
-                        .createQueryBuilder()
-                        .insert()
-                        .into(ShopifyProduct)
-                        .values(product)
-                        .orUpdate({
-                            conflict_target: ['platform_id'],  
-                            overwrite: ['title', 'body_html', 'vendor', 'product_type', 'created_at', 'updated_at', 'published_at', 'template_suffix', 'published_scope', 'tags', 'status', 'admin_graphql_api_id']
-                        })
-                        .execute();
+                    await entityManager.upsert(ShopifyProduct, product, ['platform_id'])
                 }
             })        
         } catch (error) {
@@ -44,24 +35,24 @@ export class DatabaseRepository implements OutputPort {
                 dto.body_html,
                 dto.vendor,
                 dto.product_type,
+                dto.handle,
                 new Date(dto.created_at),
                 new Date(dto.updated_at),
                 dto.status,
                 dto.published_at ? new Date(dto.published_at) : null,
-                null,
-                null,
+                dto.template_suffix ? dto.template_suffix : null,
+                dto.published_scope ? dto.published_scope : null,
                 dto.tags,
                 dto.admin_graphql_api_id
             );
         });
     }
+    
 
     async storeOrders(shopifyOrderBatch: ShopifyOrderDTO[]): Promise<void> {
         try {
-            // Transaction to ensure atomic processing
             return await AppDataSource.transaction(async (entityManager: EntityManager) => {
                 for (let dto of shopifyOrderBatch) {
-                    // First map DTO to Db Entuty
                     const shopifyOrder = new ShopifyOrder(
                         dto.id,
                         dto.admin_graphql_api_id,
@@ -90,28 +81,26 @@ export class DatabaseRepository implements OutputPort {
                         dto.user_id ? dto.user_id : null,
                         dto.updated_at ? new Date(dto.updated_at) : null,
                         dto.checkout_id,
-                        dto.checkout_token ? dto.checkout_token : null,
-                        []
+                        dto.checkout_token ? dto.checkout_token : null
                     );
-        
-                    // Save data
-                    await entityManager.upsert(ShopifyOrder, shopifyOrder, ['id']);
-        
-                    // After order is in, map it's line items
-                    for (let lineItemDTO of dto.line_items) {
-                        // Get product by id
-                        const productIdAsNumber = Number(lineItemDTO.product_id);
-                        const product = await entityManager.findOne(ShopifyProduct, { where: { platform_id: productIdAsNumber } });
-        
-                        // Create LineItem instance
-                        const lineItem = new DbLineItem(
-                            product ? product : null,  // Associar o produto, se existir
-                            shopifyOrder  // Associar à ShopifyOrder recém salva
-                        );
-        
-                        // Save LineItem
-                        await entityManager.upsert(DbLineItem, lineItem, ['id']);
-                    }
+
+                    const products = await entityManager.findBy(ShopifyProduct, {
+                        platform_id: In(dto.line_items.map(item => item.product_id))
+                    });
+
+                   
+                    shopifyOrder.line_items = dto.line_items.map((lineItemDTO) => {
+                        const product = products.find(product => {
+                            return Number(product.platform_id) === Number(lineItemDTO.product_id);
+                        });
+                        if (product) {
+                            const lineItem = new EntityLineItem(product, shopifyOrder);
+                            return lineItem;
+                        }
+                        return null;
+                    }).filter(item => item !== null);
+
+                    await entityManager.save(shopifyOrder);
                 }
             });
         } catch (error) {
@@ -142,9 +131,7 @@ export class DatabaseRepository implements OutputPort {
     }
 
     async getOrders(): Promise<Order[]> {
-        const orderEntities = await AppDataSource.manager.find(ShopifyOrder, {
-            relations: ['line_items', 'line_items.product'],
-        });
+        const orderEntities = await AppDataSource.manager.find(ShopifyOrder, { relations: ['line_items'] });
 
         return this.mapOrderPersistenceEntityToDomain(orderEntities);      
     }
@@ -154,11 +141,12 @@ export class DatabaseRepository implements OutputPort {
             return new Order(
                 order.id,
                 order.platform_id.toString(),
-                order.line_items.map(lineItem => {
-                    return new DomainLineItem(
-                        lineItem.product ? lineItem.product.id : null
-                    );
-                })
+                order.line_items ? 
+                    order.line_items.map(lineItem => {
+                        return new DomainLineItem(
+                            lineItem.id ? lineItem.id : null
+                        );
+                    }) : []
             );
         });
     }

@@ -2,7 +2,7 @@ export class Order {
   
   private _id: string;
   private _platformId: string;
-  private _lineItems: LineItem[];
+  private _lineItems!: LineItem[];
 
   constructor(id: string, platformId: string, lineItems: LineItem[]) {
     this._id = id;

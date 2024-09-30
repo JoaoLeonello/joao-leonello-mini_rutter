@@ -1,4 +1,4 @@
-import { Entity, ManyToOne, PrimaryGeneratedColumn } from 'typeorm';
+import { Entity, JoinColumn, ManyToOne, PrimaryGeneratedColumn } from 'typeorm';
 import { ShopifyOrder } from './ShopifyOrder';
 import { ShopifyProduct } from './ShopifyProduct';
 
@@ -7,10 +7,12 @@ export class LineItem {
     @PrimaryGeneratedColumn('uuid')
     id!: string;
 
-    @ManyToOne(() => ShopifyProduct, { nullable: true })
+    @ManyToOne(() => ShopifyProduct, (shopifyProduct) => shopifyProduct.line_items, { nullable: true, onDelete: 'CASCADE' })
+    @JoinColumn({ name: 'product_id' })
     product: ShopifyProduct | null;
 
-    @ManyToOne(() => ShopifyOrder, (shopifyOrder) => shopifyOrder.line_items)
+    @ManyToOne(() => ShopifyOrder, (shopifyOrder) => shopifyOrder.line_items, { onDelete: 'CASCADE' })
+    @JoinColumn({ name: 'order_id' })
     order: ShopifyOrder | null;
 
     constructor(product: ShopifyProduct | null, order: ShopifyOrder | null) {
