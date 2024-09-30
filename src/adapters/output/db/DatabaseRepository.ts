@@ -5,7 +5,6 @@ import { Product } from '../../../domain/entities/Product';
 import { OutputPort } from "../../../ports/output/OutputPort";
 import { ShopifyOrderDTO } from '../../input/shopify/dto/ShopifyOrderDTO';
 import { ShopifyProductDTO } from '../../input/shopify/dto/ShopifyProductDTO';
-import { LineItem as EntityLineItem } from './entities/LineItem';
 import { ShopifyOrder } from './entities/ShopifyOrder';
 import { ShopifyProduct } from './entities/ShopifyProduct';
 
@@ -53,54 +52,51 @@ export class DatabaseRepository implements OutputPort {
         try {
             return await AppDataSource.transaction(async (entityManager: EntityManager) => {
                 for (let dto of shopifyOrderBatch) {
-                    const shopifyOrder = new ShopifyOrder(
-                        dto.id,
-                        dto.admin_graphql_api_id,
-                        dto.buyer_accepts_marketing,
-                        dto.confirmation_number,
-                        dto.confirmed,
-                        new Date(dto.created_at),
-                        dto.currency,
-                        dto.current_subtotal_price,
-                        dto.current_total_price,
-                        dto.current_total_tax,
-                        dto.customer_locale,
-                        dto.financial_status,
-                        dto.name,
-                        dto.order_number,
-                        dto.presentment_currency,
-                        new Date(dto.processed_at),
-                        dto.source_name,
-                        dto.subtotal_price,
-                        dto.tags,
-                        dto.tax_exempt,
-                        dto.total_discounts,
-                        dto.total_line_items_price,
-                        dto.total_price,
-                        dto.total_tax,
-                        dto.user_id ? dto.user_id : null,
-                        dto.updated_at ? new Date(dto.updated_at) : null,
-                        dto.checkout_id,
-                        dto.checkout_token ? dto.checkout_token : null
-                    );
+                    let shopifyOrder = await entityManager.findOne(ShopifyOrder, { 
+                        where: { platform_id: dto.id }, relations: ['line_items'] 
+                    });
+
+                    if (!shopifyOrder) {
+                        shopifyOrder = new ShopifyOrder();
+                    } 
+
+                    shopifyOrder.platform_id = dto.id;
+                    shopifyOrder.admin_graphql_api_id = dto.admin_graphql_api_id;
+                    shopifyOrder.buyer_accepts_marketing = dto.buyer_accepts_marketing;
+                    shopifyOrder.confirmation_number = dto.confirmation_number;
+                    shopifyOrder.confirmed = dto.confirmed;
+                    shopifyOrder.created_at = new Date(dto.created_at);
+                    shopifyOrder.currency = dto.currency;
+                    shopifyOrder.current_subtotal_price = dto.current_subtotal_price;
+                    shopifyOrder.current_total_price = dto.current_total_price;
+                    shopifyOrder.current_total_tax = dto.current_total_tax;
+                    shopifyOrder.customer_locale = dto.customer_locale;
+                    shopifyOrder.financial_status = dto.financial_status;
+                    shopifyOrder.name = dto.name;
+                    shopifyOrder.order_number = dto.order_number;
+                    shopifyOrder.presentment_currency = dto.presentment_currency;
+                    shopifyOrder.processed_at = new Date(dto.processed_at);
+                    shopifyOrder.source_name = dto.source_name;
+                    shopifyOrder.subtotal_price = dto.subtotal_price;
+                    shopifyOrder.tags = dto.tags;
+                    shopifyOrder.tax_exempt = dto.tax_exempt;
+                    shopifyOrder.total_discounts = dto.total_discounts;
+                    shopifyOrder.total_line_items_price = dto.total_line_items_price;
+                    shopifyOrder.total_price = dto.total_price;
+                    shopifyOrder.total_tax = dto.total_tax;
+                    shopifyOrder.user_id = dto.user_id ? dto.user_id : undefined;
+                    shopifyOrder.updated_at = dto.updated_at ? new Date(dto.updated_at) : undefined;
+                    shopifyOrder.checkout_id = dto.checkout_id;
+                    shopifyOrder.checkout_token = dto.checkout_token ? dto.checkout_token : undefined;
 
                     const products = await entityManager.findBy(ShopifyProduct, {
                         platform_id: In(dto.line_items.map(item => item.product_id))
                     });
 
                    
-                    shopifyOrder.line_items = dto.line_items.map((lineItemDTO) => {
-                        const product = products.find(product => {
-                            return Number(product.platform_id) === Number(lineItemDTO.product_id);
-                        });
-                        if (product) {
-                            const lineItem = new EntityLineItem(product, shopifyOrder);
-                            return lineItem;
-                        }
-                        return null;
-                    }).filter(item => item !== null);
+                    shopifyOrder.line_items = products;
 
-                    await entityManager.save(shopifyOrder);
+                    await entityManager.upsert(ShopifyOrder, shopifyOrder, ['platform_id']);
                 }
             });
         } catch (error) {
@@ -140,13 +136,13 @@ export class DatabaseRepository implements OutputPort {
         return orderEntities.map(order => {
             return new Order(
                 order.id,
-                order.platform_id.toString(),
+                (order.platform_id ?? '').toString(),
                 order.line_items ? 
-                    order.line_items.map(lineItem => {
-                        return new DomainLineItem(
-                            lineItem.id ? lineItem.id : null
-                        );
-                    }) : []
+                order.line_items.map(lineItem => {
+                    return new DomainLineItem(
+                        lineItem.id ? lineItem.id : undefined
+                    );
+                }) : [new DomainLineItem()]
             );
         });
     }

@@ -1,5 +1,5 @@
-import { Column, Entity, OneToMany, PrimaryGeneratedColumn } from 'typeorm';
-import { LineItem } from './LineItem';
+import { Column, Entity, ManyToMany, PrimaryGeneratedColumn } from 'typeorm';
+import { ShopifyOrder } from './ShopifyOrder';
 
 @Entity('shopify_product')
 export class ShopifyProduct {
@@ -48,8 +48,9 @@ export class ShopifyProduct {
     @Column({ type: 'varchar', length: 255, nullable: true })
     admin_graphql_api_id!: string | null;
 
-    @OneToMany(() => LineItem, (lineItem) => lineItem.product)
-    line_items!: LineItem[];
+    // @OneToMany(() => LineItem, (lineItem) => lineItem.product)
+    @ManyToMany(() => ShopifyOrder, (shopifyOrder) => shopifyOrder.line_items)
+    line_items!: ShopifyOrder[];
 
     constructor(
         platform_id: number,
