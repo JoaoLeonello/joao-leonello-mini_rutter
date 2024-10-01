@@ -1,6 +1,8 @@
 # Exclude node_modules
 node_modules/
 
+./coverage/
+
 # Exclude build output directories
 dist/
 build/
@@ -17,7 +19,6 @@ yarn-debug.log*
 yarn-error.log*
 
 # Exclude IDE specific files (VSCode, IntelliJ, etc.)
-.vscode/
 .idea/
 *.suo
 *.ntvs*
@@ -30,4 +31,4 @@ yarn-error.log*
 # Exclude system files
 Thumbs.db
 
-coverage
+
