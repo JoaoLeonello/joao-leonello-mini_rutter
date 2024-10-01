@@ -17,7 +17,6 @@ export class CreateProductsAndOrders1633500000000 implements MigrationInterface 
                     {
                         name: 'platform_id',
                         type: 'bigint',
-                        isUnique: true
                     },
                     {
                         name: 'title',
@@ -56,11 +55,6 @@ export class CreateProductsAndOrders1633500000000 implements MigrationInterface 
                     },
                     {
                         name: 'status',
-                        type: 'varchar',
-                        length: '255',
-                    },
-                    {
-                        name: 'handle',
                         type: 'varchar',
                         length: '255',
                     },
@@ -106,8 +100,8 @@ export class CreateProductsAndOrders1633500000000 implements MigrationInterface 
                     },
                     {
                         name: 'platform_id',
-                        type: 'bigint',
-                        isUnique: true
+                        type: 'char',
+                        length: '36',
                     },
                     {
                         name: 'admin_graphql_api_id',
@@ -331,38 +325,64 @@ export class CreateProductsAndOrders1633500000000 implements MigrationInterface 
 
         await queryRunner.createTable(
             new Table({
-                name: 'line_items',
+                name: 'line_item',
                 columns: [
                     {
-                        name: 'order_id',
-                        type: 'bigint',
+                        name: 'id',
+                        type: 'char',
+                        length: '36',
+                        isPrimary: true,
+                        isGenerated: true,
+                        generationStrategy: 'uuid',
                     },
                     {
                         name: 'product_id',
-                        type: 'bigint',
-                    }
+                        type: 'char',
+                        length: '36',
+                        isNullable: true,
+                    },
+                    {
+                        name: 'order_id',
+                        type: 'char',
+                        length: '36',
+                    },
                 ],
             }),
             true
         );
 
-        await queryRunner.createForeignKey('line_items', new TableForeignKey({
-            columnNames: ['order_id'],
-            referencedColumnNames: ['platform_id'],
-            referencedTableName: 'shopify_order',
-            onDelete: 'CASCADE',
-        }));
+        await queryRunner.createForeignKey(
+            'line_item',
+            new TableForeignKey({
+                columnNames: ['product_id'],
+                referencedColumnNames: ['id'],
+                referencedTableName: 'shopify_product',
+                onDelete: 'CASCADE',
+            })
+        );
 
-        await queryRunner.createForeignKey('line_items', new TableForeignKey({
-            columnNames: ['product_id'],
-            referencedColumnNames: ['platform_id'],
-            referencedTableName: 'shopify_product',
-            onDelete: 'CASCADE',
-        }));
+        await queryRunner.createForeignKey(
+            'line_item',
+            new TableForeignKey({
+                columnNames: ['order_id'],
+                referencedColumnNames: ['id'],
+                referencedTableName: 'shopify_order',
+                onDelete: 'CASCADE',
+            })
+        );
     }
 
     public async down(queryRunner: QueryRunner): Promise<void> {
-        await queryRunner.dropTable('line_items');
+        const lineItemTable = await queryRunner.getTable('line_item');
+        if (lineItemTable) {
+            const foreignKeyOrder = lineItemTable.foreignKeys.find(fk => fk.columnNames.indexOf('order_id') !== -1);
+            if (foreignKeyOrder) await queryRunner.dropForeignKey('line_item', foreignKeyOrder);
+
+            const foreignKeyProduct = lineItemTable.foreignKeys.find(fk => fk.columnNames.indexOf('product_id') !== -1);
+            if (foreignKeyProduct) await queryRunner.dropForeignKey('line_item', foreignKeyProduct);
+        }
+
+        await queryRunner.dropTable('line_item');
         await queryRunner.dropTable('shopify_order');
         await queryRunner.dropTable('shopify_product');
     }

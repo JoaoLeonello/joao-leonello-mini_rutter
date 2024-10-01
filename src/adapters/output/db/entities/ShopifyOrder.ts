@@ -1,168 +1,158 @@
-import { Column, Entity, JoinTable, ManyToMany, PrimaryGeneratedColumn } from 'typeorm';
-import { ShopifyProduct } from './ShopifyProduct';
+import { Column, Entity, OneToMany, PrimaryGeneratedColumn } from 'typeorm';
+import { LineItem } from './LineItem';
 
 @Entity('shopify_order')
 export class ShopifyOrder {
-    @PrimaryGeneratedColumn('uuid')
+    @PrimaryGeneratedColumn('uuid') 
     id!: string;
 
     @Column({ type: 'bigint', unique: true })
-    platform_id!: number | undefined;
+    platform_id!: number;
 
     @Column({ type: 'varchar', length: 255 })
-    admin_graphql_api_id!: string | undefined;
+    admin_graphql_api_id!: string;
 
     @Column({ type: 'bigint', nullable: true })
-    app_id!: number | undefined;
+    app_id!: number | null;
 
     @Column({ type: 'varchar', length: 255, nullable: true })
-    browser_ip!: string | undefined;
+    browser_ip!: string | null;
 
     @Column({ type: 'boolean' })
-    buyer_accepts_marketing!: boolean | undefined;
+    buyer_accepts_marketing!: boolean;
 
     @Column({ type: 'varchar', length: 255, nullable: true })
-    cancel_reason!: string | undefined;
+    cancel_reason!: string | null;
 
     @Column({ type: 'timestamp', nullable: true })
-    cancelled_at!: Date | undefined;
+    cancelled_at!: Date | null;
 
     @Column({ type: 'varchar', length: 255, nullable: true })
-    cart_token!: string | undefined;
+    cart_token!: string | null;
 
     @Column({ type: 'bigint' })
-    checkout_id!: number | undefined;
+    checkout_id!: number;
 
-    @Column({ type: 'varchar', length: 255, nullable: true })
-    checkout_token!: string | undefined;
+    @Column({ type: 'varchar', length: 255, nullable: true }) // Marcar como nullable se não for obrigatório
+    checkout_token!: string | null;  // O erro estava aqui, garanta que um valor seja passado ou permitido ser null
 
     @Column({ type: 'varchar', length: 255 })
-    confirmation_number!: string | undefined;
+    confirmation_number!: string;
 
     @Column({ type: 'boolean' })
-    confirmed!: boolean | undefined;
+    confirmed!: boolean;
 
     @Column({ type: 'timestamp' })
-    created_at!: Date | undefined;
+    created_at!: Date;
 
     @Column({ type: 'varchar', length: 10 })
-    currency!: string | undefined;
+    currency!: string;
 
     @Column({ type: 'decimal', precision: 10, scale: 2 })
-    current_subtotal_price!: string | undefined;
+    current_subtotal_price!: string;
 
     @Column({ type: 'decimal', precision: 10, scale: 2 })
-    current_total_price!: string | undefined;
+    current_total_price!: string;
 
     @Column({ type: 'decimal', precision: 10, scale: 2 })
-    current_total_tax!: string | undefined;
+    current_total_tax!: string;
 
     @Column({ type: 'varchar', length: 10 })
-    customer_locale!: string | undefined;
+    customer_locale!: string;
 
     @Column({ type: 'varchar', length: 255 })
-    financial_status!: string | undefined;
+    financial_status!: string;
 
     @Column({ type: 'varchar', length: 255, nullable: true })
-    fulfillment_status!: string | undefined;
+    fulfillment_status!: string | null;
 
     @Column({ type: 'varchar', length: 255, nullable: true })
-    landing_site!: string | undefined;
+    landing_site!: string | null;
 
     @Column({ type: 'varchar', length: 255 })
-    name!: string | undefined;
+    name!: string;
 
     @Column({ type: 'int' })
-    order_number!: number | undefined;
+    order_number!: number;
 
     @Column({ type: 'varchar', length: 10 })
-    presentment_currency!: string | undefined;
+    presentment_currency!: string;
 
     @Column({ type: 'timestamp' })
-    processed_at!: Date | undefined;
+    processed_at!: Date;
 
     @Column({ type: 'varchar', length: 255, nullable: true })
-    reference!: string | undefined;
+    reference!: string | null;
 
     @Column({ type: 'varchar', length: 255, nullable: true })
-    referring_site!: string | undefined;
+    referring_site!: string | null;
 
     @Column({ type: 'varchar', length: 255 })
-    source_name!: string | undefined;
+    source_name!: string;
 
     @Column({ type: 'decimal', precision: 10, scale: 2 })
-    subtotal_price!: string | undefined;
+    subtotal_price!: string;
 
     @Column({ type: 'text' })
-    tags!: string | undefined;
+    tags!: string;
 
     @Column({ type: 'boolean' })
-    tax_exempt!: boolean | undefined;
+    tax_exempt!: boolean;
 
     @Column({ type: 'decimal', precision: 10, scale: 2 })
-    total_discounts!: string | undefined;
+    total_discounts!: string;
 
     @Column({ type: 'decimal', precision: 10, scale: 2 })
-    total_line_items_price!: string | undefined;
+    total_line_items_price!: string;
 
     @Column({ type: 'decimal', precision: 10, scale: 2 })
-    total_price!: string | undefined;
+    total_price!: string;
 
     @Column({ type: 'decimal', precision: 10, scale: 2 })
-    total_tax!: string | undefined;
+    total_tax!: string;
 
     @Column({ type: 'decimal', precision: 10, scale: 2, nullable: true })
-    total_tip_received!: string | undefined;
+    total_tip_received!: string | null;
 
     @Column({ type: 'timestamp', nullable: true })
-    updated_at!: Date | undefined;
+    updated_at!: Date | null;
 
     @Column({ type: 'bigint', nullable: true })
-    user_id!: number | undefined;
+    user_id!: number | null;
 
-    @ManyToMany(() => ShopifyProduct, (shopifyProduct) => shopifyProduct.line_items, { cascade: true })
-    @JoinTable({
-        name: 'line_items', 
-        joinColumn: {
-            name: 'order_id', 
-            referencedColumnName: 'platform_id'
-        },
-        inverseJoinColumn: {
-            name: 'product_id',
-            referencedColumnName: 'platform_id'
-        }
-    })
-    line_items!: (ShopifyProduct | undefined | null)[];
+    @OneToMany(() => LineItem, (lineItem) => lineItem.order, { cascade: true })
+    line_items!: LineItem[];
 
     constructor(
-        platform_id?: number,
-        admin_graphql_api_id?: string,
-        buyer_accepts_marketing?: boolean,
-        confirmation_number?: string,
-        confirmed?: boolean,
-        created_at?: Date,
-        currency?: string,
-        current_subtotal_price?: string,
-        current_total_price?: string,
-        current_total_tax?: string,
-        customer_locale?: string,
-        financial_status?: string,
-        name?: string,
-        order_number?: number,
-        presentment_currency?: string,
-        processed_at?: Date,
-        source_name?: string,
-        subtotal_price?: string,
-        tags?: string,
-        tax_exempt?: boolean,
-        total_discounts?: string,
-        total_line_items_price?: string,
-        total_price?: string,
-        total_tax?: string,
-        user_id?: number,
-        updated_at?: Date,
-        checkout_id?: number,
-        checkout_token?: string | undefined,
+        platform_id: number,
+        admin_graphql_api_id: string,
+        buyer_accepts_marketing: boolean,
+        confirmation_number: string,
+        confirmed: boolean,
+        created_at: Date,
+        currency: string,
+        current_subtotal_price: string,
+        current_total_price: string,
+        current_total_tax: string,
+        customer_locale: string,
+        financial_status: string,
+        name: string,
+        order_number: number,
+        presentment_currency: string,
+        processed_at: Date,
+        source_name: string,
+        subtotal_price: string,
+        tags: string,
+        tax_exempt: boolean,
+        total_discounts: string,
+        total_line_items_price: string,
+        total_price: string,
+        total_tax: string,
+        user_id: number | null = null,
+        updated_at: Date | null = null,
+        checkout_id: number,
+        checkout_token: string | null, 
+        line_items: LineItem[]
     ) {
         this.platform_id = platform_id;
         this.admin_graphql_api_id = admin_graphql_api_id;
@@ -191,6 +181,7 @@ export class ShopifyOrder {
         this.user_id = user_id;
         this.updated_at = updated_at;
         this.checkout_id = checkout_id;
-        this.checkout_token = checkout_token;
+        this.checkout_token = checkout_token; 
+        this.line_items = line_items;
     }
 }

@@ -1,9 +1,8 @@
-import { Column, Entity, ManyToMany, PrimaryGeneratedColumn } from 'typeorm';
-import { ShopifyOrder } from './ShopifyOrder';
+import { Column, Entity, PrimaryGeneratedColumn } from 'typeorm';
 
 @Entity('shopify_product')
 export class ShopifyProduct {
-    @PrimaryGeneratedColumn('uuid')
+    @PrimaryGeneratedColumn('uuid') 
     id!: string;
 
     @Column({ type: 'bigint', unique: true })
@@ -20,9 +19,6 @@ export class ShopifyProduct {
 
     @Column({ type: 'varchar', length: 255, nullable: true })
     product_type!: string | null;
-
-    @Column({ type: 'varchar', length: 255, nullable: true })
-    handle!: string | null;
 
     @Column({ type: 'timestamp' })
     created_at!: Date;
@@ -48,16 +44,12 @@ export class ShopifyProduct {
     @Column({ type: 'varchar', length: 255, nullable: true })
     admin_graphql_api_id!: string | null;
 
-    @ManyToMany(() => ShopifyOrder, (shopifyOrder) => shopifyOrder.line_items)
-    line_items!: ShopifyOrder[];
-
     constructor(
         platform_id: number,
         title: string,
         body_html: string | null,
         vendor: string | null,
         product_type: string | null,
-        handle: string | null,
         created_at: Date,
         updated_at: Date,
         status: string,
@@ -65,14 +57,13 @@ export class ShopifyProduct {
         template_suffix: string | null = null,
         published_scope: string | null = null,
         tags: string | null = null,
-        admin_graphql_api_id: string | null = null,
+        admin_graphql_api_id: string | null = null
     ) {
         this.platform_id = platform_id;
         this.title = title;
         this.body_html = body_html;
         this.vendor = vendor;
         this.product_type = product_type;
-        this.handle = handle;
         this.created_at = created_at;
         this.updated_at = updated_at;
         this.status = status;
