@@ -29,3 +29,5 @@ yarn-error.log*
 
 # Exclude system files
 Thumbs.db
+
+coverage
