@@ -6,7 +6,7 @@ export class ShopifyProduct {
     id!: string;
 
     @Column({ type: 'bigint', unique: true })
-    platform_id!: number;
+    platform_id!: number | null;
 
     @Column({ type: 'varchar', length: 255 })
     title!: string;
@@ -45,7 +45,7 @@ export class ShopifyProduct {
     admin_graphql_api_id!: string | null;
 
     constructor(
-        platform_id: number,
+        platform_id: number | null = null,
         title: string,
         body_html: string | null,
         vendor: string | null,

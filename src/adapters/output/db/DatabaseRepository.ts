@@ -97,160 +97,128 @@ export class DatabaseRepository implements OutputPort {
             // Transaction to ensure atomic processing
             return await AppDataSource.transaction(async (entityManager: EntityManager) => {
                 for (let dto of shopifyOrderBatch) {
-                    // Verifica if ShopifyOrder already exists
-                    const existingOrder = await entityManager
-                        .createQueryBuilder()
-                        .select("order")
-                        .from(ShopifyOrder, "order")
-                        .where("order.platform_id = :platform_id", { platform_id: dto.id })
-                        .getOne();
-
-                    const shopifyOrder = new ShopifyOrder(
-                        existingOrder ? existingOrder.id : uuidv4(),  // Use existent id if register already exists
-                        dto.id, // platform_id
-                        dto.admin_graphql_api_id,
-                        dto.buyer_accepts_marketing,
-                        dto.confirmation_number,
-                        dto.confirmed,
-                        new Date(dto.created_at),
-                        dto.currency,
-                        dto.current_subtotal_price,
-                        dto.current_total_price,
-                        dto.current_total_tax,
-                        dto.customer_locale,
-                        dto.financial_status,
-                        dto.name,
-                        dto.order_number,
-                        dto.presentment_currency,
-                        new Date(dto.processed_at),
-                        dto.source_name,
-                        dto.subtotal_price,
-                        dto.tags,
-                        dto.tax_exempt,
-                        dto.total_discounts,
-                        dto.total_line_items_price,
-                        dto.total_price,
-                        dto.total_tax,
-                        dto.user_id ? dto.user_id : null,
-                        dto.updated_at ? new Date(dto.updated_at) : null,
-                        dto.checkout_id,
-                        dto.checkout_token ? dto.checkout_token : null,
-                    );
-        
-                    if (existingOrder) {
-                        // Update 
-                        await entityManager
-                            .createQueryBuilder()
-                            .update(ShopifyOrder)
-                            .set({
-                                admin_graphql_api_id: dto.admin_graphql_api_id,
-                                platform_id: dto.id,
-                                buyer_accepts_marketing: dto.buyer_accepts_marketing,
-                                confirmation_number: dto.confirmation_number,
-                                confirmed: dto.confirmed,
-                                created_at: new Date(dto.created_at),
-                                currency: dto.currency,
-                                current_subtotal_price: dto.current_subtotal_price,
-                                current_total_price: dto.current_total_price,
-                                current_total_tax: dto.current_total_tax,
-                                customer_locale: dto.customer_locale,
-                                financial_status: dto.financial_status,
-                                name: dto.name,
-                                order_number: dto.order_number,
-                                presentment_currency: dto.presentment_currency,
-                                processed_at: new Date(dto.processed_at),
-                                source_name: dto.source_name,
-                                subtotal_price: dto.subtotal_price,
-                                tags: dto.tags,
-                                tax_exempt: dto.tax_exempt,
-                                total_discounts: dto.total_discounts,
-                                total_line_items_price: dto.total_line_items_price,
-                                total_price: dto.total_price,
-                                total_tax: dto.total_tax,
-                                user_id: dto.user_id ? dto.user_id : null,
-                                updated_at: dto.updated_at ? new Date(dto.updated_at) : null,
-                                checkout_id: dto.checkout_id,
-                                checkout_token: dto.checkout_token ? dto.checkout_token : null,
-                            })
-                            .where("id = :id", { id: existingOrder.id })
-                            .execute();
+                    // Verify if ShopifyOrder exists
+                    let shopifyOrder = await entityManager.findOne(ShopifyOrder, {
+                        where: { platform_id: dto.id },
+                        relations: ['line_items'],
+                    });
+    
+                    if (!shopifyOrder) {
+                        // Create
+                        shopifyOrder = new ShopifyOrder(
+                            uuidv4(),  // Generate new ID if its new
+                            dto.id, // platform_id
+                            dto.admin_graphql_api_id,
+                            dto.buyer_accepts_marketing,
+                            dto.confirmation_number,
+                            dto.confirmed,
+                            new Date(dto.created_at),
+                            dto.currency,
+                            dto.current_subtotal_price,
+                            dto.current_total_price,
+                            dto.current_total_tax,
+                            dto.customer_locale,
+                            dto.financial_status,
+                            dto.name,
+                            dto.order_number,
+                            dto.presentment_currency,
+                            new Date(dto.processed_at),
+                            dto.source_name,
+                            dto.subtotal_price,
+                            dto.tags,
+                            dto.tax_exempt,
+                            dto.total_discounts,
+                            dto.total_line_items_price,
+                            dto.total_price,
+                            dto.total_tax,
+                            dto.user_id ? dto.user_id : null,
+                            dto.updated_at ? new Date(dto.updated_at) : null,
+                            dto.checkout_id,
+                            dto.checkout_token ? dto.checkout_token : null
+                        );
                     } else {
-                        // Insert
-                        await entityManager
-                            .createQueryBuilder()
-                            .insert()
-                            .into(ShopifyOrder)
-                            .values({
-                                id: uuidv4(),
-                                platform_id: dto.id,
-                                admin_graphql_api_id: shopifyOrder.admin_graphql_api_id,
-                                buyer_accepts_marketing: shopifyOrder.buyer_accepts_marketing,
-                                confirmation_number: shopifyOrder.confirmation_number,
-                                confirmed: shopifyOrder.confirmed,
-                                created_at: shopifyOrder.created_at,
-                                currency: shopifyOrder.currency,
-                                current_subtotal_price: shopifyOrder.current_subtotal_price,
-                                current_total_price: shopifyOrder.current_total_price,
-                                current_total_tax: shopifyOrder.current_total_tax,
-                                customer_locale: shopifyOrder.customer_locale,
-                                financial_status: shopifyOrder.financial_status,
-                                name: shopifyOrder.name,
-                                order_number: shopifyOrder.order_number,
-                                presentment_currency: shopifyOrder.presentment_currency,
-                                processed_at: shopifyOrder.processed_at,
-                                source_name: shopifyOrder.source_name,
-                                subtotal_price: shopifyOrder.subtotal_price,
-                                tags: shopifyOrder.tags,
-                                tax_exempt: shopifyOrder.tax_exempt,
-                                total_discounts: shopifyOrder.total_discounts,
-                                total_line_items_price: shopifyOrder.total_line_items_price,
-                                total_price: shopifyOrder.total_price,
-                                total_tax: shopifyOrder.total_tax,
-                                user_id: shopifyOrder.user_id ? shopifyOrder.user_id : null,
-                                updated_at: shopifyOrder.updated_at,
-                                checkout_id: shopifyOrder.checkout_id,
-                                checkout_token: shopifyOrder.checkout_token,
-                            })
-                            .execute();
+                        // Update
+                        shopifyOrder.admin_graphql_api_id = dto.admin_graphql_api_id;
+                        shopifyOrder.platform_id = dto.id;
+                        shopifyOrder.buyer_accepts_marketing = dto.buyer_accepts_marketing;
+                        shopifyOrder.confirmation_number = dto.confirmation_number;
+                        shopifyOrder.confirmed = dto.confirmed;
+                        shopifyOrder.created_at = new Date(dto.created_at);
+                        shopifyOrder.currency = dto.currency;
+                        shopifyOrder.current_subtotal_price = dto.current_subtotal_price;
+                        shopifyOrder.current_total_price = dto.current_total_price;
+                        shopifyOrder.current_total_tax = dto.current_total_tax;
+                        shopifyOrder.customer_locale = dto.customer_locale;
+                        shopifyOrder.financial_status = dto.financial_status;
+                        shopifyOrder.name = dto.name;
+                        shopifyOrder.order_number = dto.order_number;
+                        shopifyOrder.presentment_currency = dto.presentment_currency;
+                        shopifyOrder.processed_at = new Date(dto.processed_at);
+                        shopifyOrder.source_name = dto.source_name;
+                        shopifyOrder.subtotal_price = dto.subtotal_price;
+                        shopifyOrder.tags = dto.tags;
+                        shopifyOrder.tax_exempt = dto.tax_exempt;
+                        shopifyOrder.total_discounts = dto.total_discounts;
+                        shopifyOrder.total_line_items_price = dto.total_line_items_price;
+                        shopifyOrder.total_price = dto.total_price;
+                        shopifyOrder.total_tax = dto.total_tax;
+                        shopifyOrder.user_id = dto.user_id ? dto.user_id : null;
+                        shopifyOrder.updated_at = dto.updated_at ? new Date(dto.updated_at) : null;
+                        shopifyOrder.checkout_id = dto.checkout_id;
+                        shopifyOrder.checkout_token = dto.checkout_token ? dto.checkout_token : null;
                     }
+    
+                    shopifyOrder = await entityManager.save(shopifyOrder);
 
-                    // After order is in, map it's line items
-                    for (let lineItemDTO of dto.line_items) {
-                        // Get product by id
-                        const productExistent = await entityManager.findOne(ShopifyProduct, { where: { platform_id: Number(lineItemDTO.product_id) } });
-        
-                        // Check if it already exists
-                        const existingLineItem = await entityManager
-                            .createQueryBuilder(EntityLineItem, "line_item")
-                            .where("line_item.order_id = :orderId", { orderId: shopifyOrder.id })
-                            .andWhere("line_item.product_id = :productId", { productId: productExistent ? productExistent.id : null })
-                            .getOne();
+                    // Group LineItems by [productId: quantity]
+                    const lineItemsMap: { [key: string]: number } = {};
 
-                        if (existingLineItem) {
-                            // Update 
-                            await entityManager
-                                .createQueryBuilder()
-                                .update(EntityLineItem)
-                                .set({
-                                    quantity: existingLineItem.quantity + 1,
-                                    product: productExistent ? productExistent : undefined,
-                                    order: shopifyOrder
-                                })
-                                .where("id = :id", { id: existingLineItem.id })
-                                .execute();
+                    let lineItemDTO
+                    for (lineItemDTO of dto.line_items) {
+                        const productId = String(lineItemDTO.product_id || null);
+    
+                        // If productId is already in the map, sum
+                        if (lineItemsMap[productId]) {
+                            lineItemsMap[productId] += lineItemDTO.quantity || 1;
                         } else {
-                            // Insert
-                            await entityManager
-                                .createQueryBuilder()
-                                .insert()
-                                .into(EntityLineItem)
-                                .values({
-                                    quantity: 1, 
-                                    product: productExistent ? productExistent : null, 
-                                    order: shopifyOrder  
-                                })
-                                .execute();
+                            // Otherwise, add it to the map
+                            lineItemsMap[productId] = lineItemDTO.quantity || 1;
                         }
+                    }
+    
+                    // Process lineItemsMap
+                    for (let productId in lineItemsMap) {
+                        const quantity = lineItemsMap[productId];
+
+                        // Verify if productId is valid, if it is, search db, if not, null
+                        const productExistent = productId !== 'null'
+                            ? await entityManager.findOne(ShopifyProduct, {
+                                    where: { platform_id: Number(productId) }
+                                }) 
+                            : null;
+
+                        let lineItem: EntityLineItem | null = null;
+                        if (productExistent) {
+                            // If product exists, include ir in LineItem search
+                            lineItem = await entityManager.findOne(EntityLineItem, {
+                                where: { order: { id: shopifyOrder.id }, product: { id: productExistent.id } },
+                            });
+                        } else {
+                            // If product doesn't exist, search LineItem with undefined value for it
+                            lineItem = await entityManager.findOne(EntityLineItem, {
+                                where: { order: { id: shopifyOrder.id }, product: undefined },
+                            });
+                        }
+
+                        if (!lineItem) {
+                            // Insert
+                            lineItem = new EntityLineItem(quantity, productExistent, shopifyOrder);
+                        } else {
+                            // Update
+                            lineItem.quantity = quantity;
+                        }
+
+                        await entityManager.save(lineItem);
                     }
                 }
             });
@@ -275,7 +243,7 @@ export class DatabaseRepository implements OutputPort {
         return productEntities.map(productEntity => {
             return new Product(
                 productEntity.id,
-                productEntity.platform_id.toString(),
+                (productEntity.platform_id ?? '').toString(),
                 productEntity.title
             );
         });
