@@ -95,8 +95,6 @@ export class CreateProductsAndOrders1633500000000 implements MigrationInterface 
                         type: 'char',
                         length: '36',
                         isPrimary: true,
-                        isGenerated: true,
-                        generationStrategy: 'uuid',
                     },
                     {
                         name: 'platform_id',
@@ -334,6 +332,11 @@ export class CreateProductsAndOrders1633500000000 implements MigrationInterface 
                         isPrimary: true,
                         isGenerated: true,
                         generationStrategy: 'uuid',
+                    },
+                    {
+                        name: 'quantity',
+                        type: 'int',
+                        isNullable: true
                     },
                     {
                         name: 'product_id',

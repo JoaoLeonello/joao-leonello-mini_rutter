@@ -1,9 +1,9 @@
-import { Column, Entity, OneToMany, PrimaryGeneratedColumn } from 'typeorm';
+import { Column, Entity, OneToMany, PrimaryColumn } from 'typeorm';
 import { LineItem } from './LineItem';
 
 @Entity('shopify_order')
 export class ShopifyOrder {
-    @PrimaryGeneratedColumn('uuid') 
+    @PrimaryColumn('uuid') 
     id!: string;
 
     @Column({ type: 'bigint', unique: true })
@@ -33,8 +33,8 @@ export class ShopifyOrder {
     @Column({ type: 'bigint' })
     checkout_id!: number;
 
-    @Column({ type: 'varchar', length: 255, nullable: true }) // Marcar como nullable se não for obrigatório
-    checkout_token!: string | null;  // O erro estava aqui, garanta que um valor seja passado ou permitido ser null
+    @Column({ type: 'varchar', length: 255, nullable: true })
+    checkout_token!: string | null; 
 
     @Column({ type: 'varchar', length: 255 })
     confirmation_number!: string;
@@ -124,6 +124,7 @@ export class ShopifyOrder {
     line_items!: LineItem[];
 
     constructor(
+        id: string,
         platform_id: number,
         admin_graphql_api_id: string,
         buyer_accepts_marketing: boolean,
@@ -152,8 +153,8 @@ export class ShopifyOrder {
         updated_at: Date | null = null,
         checkout_id: number,
         checkout_token: string | null, 
-        line_items: LineItem[]
     ) {
+        this.id = id;
         this.platform_id = platform_id;
         this.admin_graphql_api_id = admin_graphql_api_id;
         this.buyer_accepts_marketing = buyer_accepts_marketing;
@@ -182,6 +183,5 @@ export class ShopifyOrder {
         this.updated_at = updated_at;
         this.checkout_id = checkout_id;
         this.checkout_token = checkout_token; 
-        this.line_items = line_items;
     }
 }

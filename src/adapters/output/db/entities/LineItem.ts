@@ -1,4 +1,4 @@
-import { Entity, JoinColumn, ManyToOne, PrimaryGeneratedColumn } from 'typeorm';
+import { Column, Entity, JoinColumn, ManyToOne, PrimaryGeneratedColumn } from 'typeorm';
 import { ShopifyOrder } from './ShopifyOrder';
 import { ShopifyProduct } from './ShopifyProduct';
 
@@ -6,6 +6,9 @@ import { ShopifyProduct } from './ShopifyProduct';
 export class LineItem {
     @PrimaryGeneratedColumn('uuid')
     id!: string;
+
+    @Column('int')
+    quantity: number;
 
     @ManyToOne(() => ShopifyProduct, { nullable: true })
     @JoinColumn({ name: 'product_id' })
@@ -15,7 +18,8 @@ export class LineItem {
     @JoinColumn({ name: 'order_id' })
     order: ShopifyOrder | null;
 
-    constructor(product: ShopifyProduct | null, order: ShopifyOrder | null) {
+    constructor(quantity: number = 1, product: ShopifyProduct | null, order: ShopifyOrder | null) {
+        this.quantity = quantity;
         this.product = product;
         this.order = order;
     }

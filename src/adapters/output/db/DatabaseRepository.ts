@@ -1,4 +1,5 @@
 import { EntityManager } from 'typeorm';
+import { v4 as uuidv4 } from 'uuid';
 import { AppDataSource } from '../../../config/typeOrmConfig';
 import { LineItem as DomainLineItem, Order } from '../../../domain/entities/Order';
 import { Product } from '../../../domain/entities/Product';
@@ -18,7 +19,50 @@ export class DatabaseRepository implements OutputPort {
             // Transaction to ensure atomic processing
             return await AppDataSource.transaction(async (entityManager: EntityManager) => {
                 for (let product of shopifyProductDbBatch) {
-                    await entityManager.upsert(ShopifyProduct, product, ['platform_id'])
+                    const existingProduct = await entityManager
+                        .createQueryBuilder(ShopifyProduct, "product")
+                        .where("product.platform_id = :platformId", { platformId: product.platform_id })
+                        .getOne();
+            
+                    if (existingProduct) {
+                        // Update
+                        await entityManager
+                            .createQueryBuilder()
+                            .update(ShopifyProduct)
+                            .set({
+                                title: product.title,
+                                body_html: product.body_html,
+                                vendor: product.vendor,
+                                product_type: product.product_type,
+                                updated_at: product.updated_at,
+                                published_at: product.published_at,
+                                status: product.status,
+                                tags: product.tags,
+                                admin_graphql_api_id: product.admin_graphql_api_id,
+                            })
+                            .where("platform_id = :platformId", { platformId: product.platform_id })
+                            .execute();
+                    } else {
+                        // Insert
+                        await entityManager
+                            .createQueryBuilder()
+                            .insert()
+                            .into(ShopifyProduct)
+                            .values({
+                                platform_id: product.platform_id,
+                                title: product.title,
+                                body_html: product.body_html,
+                                vendor: product.vendor,
+                                product_type: product.product_type,
+                                created_at: product.created_at,
+                                updated_at: product.updated_at,
+                                published_at: product.published_at,
+                                status: product.status,
+                                tags: product.tags,
+                                admin_graphql_api_id: product.admin_graphql_api_id,
+                            })
+                            .execute();
+                    }
                 }
             })        
         } catch (error) {
@@ -53,9 +97,17 @@ export class DatabaseRepository implements OutputPort {
             // Transaction to ensure atomic processing
             return await AppDataSource.transaction(async (entityManager: EntityManager) => {
                 for (let dto of shopifyOrderBatch) {
-                    // First map DTO to Db Entity
+                    // Verifica if ShopifyOrder already exists
+                    const existingOrder = await entityManager
+                        .createQueryBuilder()
+                        .select("order")
+                        .from(ShopifyOrder, "order")
+                        .where("order.platform_id = :platform_id", { platform_id: dto.id })
+                        .getOne();
+
                     const shopifyOrder = new ShopifyOrder(
-                        dto.id,
+                        existingOrder ? existingOrder.id : uuidv4(),  // Use existent id if register already exists
+                        dto.id, // platform_id
                         dto.admin_graphql_api_id,
                         dto.buyer_accepts_marketing,
                         dto.confirmation_number,
@@ -83,26 +135,122 @@ export class DatabaseRepository implements OutputPort {
                         dto.updated_at ? new Date(dto.updated_at) : null,
                         dto.checkout_id,
                         dto.checkout_token ? dto.checkout_token : null,
-                        []
                     );
         
-                    // Save data
-                    await entityManager.upsert(ShopifyOrder, shopifyOrder, ['id']);
-        
+                    if (existingOrder) {
+                        // Update 
+                        await entityManager
+                            .createQueryBuilder()
+                            .update(ShopifyOrder)
+                            .set({
+                                admin_graphql_api_id: dto.admin_graphql_api_id,
+                                platform_id: dto.id,
+                                buyer_accepts_marketing: dto.buyer_accepts_marketing,
+                                confirmation_number: dto.confirmation_number,
+                                confirmed: dto.confirmed,
+                                created_at: new Date(dto.created_at),
+                                currency: dto.currency,
+                                current_subtotal_price: dto.current_subtotal_price,
+                                current_total_price: dto.current_total_price,
+                                current_total_tax: dto.current_total_tax,
+                                customer_locale: dto.customer_locale,
+                                financial_status: dto.financial_status,
+                                name: dto.name,
+                                order_number: dto.order_number,
+                                presentment_currency: dto.presentment_currency,
+                                processed_at: new Date(dto.processed_at),
+                                source_name: dto.source_name,
+                                subtotal_price: dto.subtotal_price,
+                                tags: dto.tags,
+                                tax_exempt: dto.tax_exempt,
+                                total_discounts: dto.total_discounts,
+                                total_line_items_price: dto.total_line_items_price,
+                                total_price: dto.total_price,
+                                total_tax: dto.total_tax,
+                                user_id: dto.user_id ? dto.user_id : null,
+                                updated_at: dto.updated_at ? new Date(dto.updated_at) : null,
+                                checkout_id: dto.checkout_id,
+                                checkout_token: dto.checkout_token ? dto.checkout_token : null,
+                            })
+                            .where("id = :id", { id: existingOrder.id })
+                            .execute();
+                    } else {
+                        // Insert
+                        await entityManager
+                            .createQueryBuilder()
+                            .insert()
+                            .into(ShopifyOrder)
+                            .values({
+                                id: uuidv4(),
+                                platform_id: dto.id,
+                                admin_graphql_api_id: shopifyOrder.admin_graphql_api_id,
+                                buyer_accepts_marketing: shopifyOrder.buyer_accepts_marketing,
+                                confirmation_number: shopifyOrder.confirmation_number,
+                                confirmed: shopifyOrder.confirmed,
+                                created_at: shopifyOrder.created_at,
+                                currency: shopifyOrder.currency,
+                                current_subtotal_price: shopifyOrder.current_subtotal_price,
+                                current_total_price: shopifyOrder.current_total_price,
+                                current_total_tax: shopifyOrder.current_total_tax,
+                                customer_locale: shopifyOrder.customer_locale,
+                                financial_status: shopifyOrder.financial_status,
+                                name: shopifyOrder.name,
+                                order_number: shopifyOrder.order_number,
+                                presentment_currency: shopifyOrder.presentment_currency,
+                                processed_at: shopifyOrder.processed_at,
+                                source_name: shopifyOrder.source_name,
+                                subtotal_price: shopifyOrder.subtotal_price,
+                                tags: shopifyOrder.tags,
+                                tax_exempt: shopifyOrder.tax_exempt,
+                                total_discounts: shopifyOrder.total_discounts,
+                                total_line_items_price: shopifyOrder.total_line_items_price,
+                                total_price: shopifyOrder.total_price,
+                                total_tax: shopifyOrder.total_tax,
+                                user_id: shopifyOrder.user_id ? shopifyOrder.user_id : null,
+                                updated_at: shopifyOrder.updated_at,
+                                checkout_id: shopifyOrder.checkout_id,
+                                checkout_token: shopifyOrder.checkout_token,
+                            })
+                            .execute();
+                    }
+
                     // After order is in, map it's line items
                     for (let lineItemDTO of dto.line_items) {
                         // Get product by id
-                        const productIdAsNumber = Number(lineItemDTO.product_id);
-                        const product = await entityManager.findOne(ShopifyProduct, { where: { platform_id: productIdAsNumber } });
+                        const productExistent = await entityManager.findOne(ShopifyProduct, { where: { platform_id: Number(lineItemDTO.product_id) } });
         
-                        // Create LineItem instance
-                        const lineItem = new EntityLineItem(
-                            product ? product : null, 
-                            shopifyOrder  
-                        );
-        
-                        // Save LineItem
-                        await entityManager.upsert(EntityLineItem, lineItem, ['id']);
+                        // Check if it already exists
+                        const existingLineItem = await entityManager
+                            .createQueryBuilder(EntityLineItem, "line_item")
+                            .where("line_item.order_id = :orderId", { orderId: shopifyOrder.id })
+                            .andWhere("line_item.product_id = :productId", { productId: productExistent ? productExistent.id : null })
+                            .getOne();
+
+                        if (existingLineItem) {
+                            // Update 
+                            await entityManager
+                                .createQueryBuilder()
+                                .update(EntityLineItem)
+                                .set({
+                                    quantity: existingLineItem.quantity + 1,
+                                    product: productExistent ? productExistent : undefined,
+                                    order: shopifyOrder
+                                })
+                                .where("id = :id", { id: existingLineItem.id })
+                                .execute();
+                        } else {
+                            // Insert
+                            await entityManager
+                                .createQueryBuilder()
+                                .insert()
+                                .into(EntityLineItem)
+                                .values({
+                                    quantity: 1, 
+                                    product: productExistent ? productExistent : null, 
+                                    order: shopifyOrder  
+                                })
+                                .execute();
+                        }
                     }
                 }
             });
@@ -146,10 +294,12 @@ export class DatabaseRepository implements OutputPort {
             return new Order(
                 order.id,
                 order.platform_id.toString(),
-                order.line_items.map(lineItem => {
-                    return new DomainLineItem(
-                        lineItem.product ? lineItem.product.id : undefined
-                    );
+                order.line_items.flatMap(lineItem => {
+                    return Array.from({ length: lineItem.quantity }, () => {
+                        return new DomainLineItem(
+                            lineItem.product ? lineItem.product.id : undefined
+                        );
+                    });
                 })
             );
         });
