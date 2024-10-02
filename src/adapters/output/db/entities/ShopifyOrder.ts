@@ -1,10 +1,11 @@
 import { Column, Entity, OneToMany, PrimaryColumn } from 'typeorm';
+import { v4 as uuidv4 } from 'uuid';
 import { LineItem } from './LineItem';
 
 @Entity('shopify_order')
 export class ShopifyOrder {
     @PrimaryColumn('uuid') 
-    id!: string;
+    id: string;
 
     @Column({ type: 'bigint', unique: true })
     platform_id!: number;
@@ -124,7 +125,7 @@ export class ShopifyOrder {
     line_items!: LineItem[];
 
     constructor(
-        id: string,
+        id: string = uuidv4(),
         platform_id: number,
         admin_graphql_api_id: string,
         buyer_accepts_marketing: boolean,
@@ -152,9 +153,9 @@ export class ShopifyOrder {
         user_id: number | null = null,
         updated_at: Date | null = null,
         checkout_id: number,
-        checkout_token: string | null, 
+        checkout_token: string | null = null, 
     ) {
-        this.id = id;
+        this.id = id,  // Generate new ID if its new;
         this.platform_id = platform_id;
         this.admin_graphql_api_id = admin_graphql_api_id;
         this.buyer_accepts_marketing = buyer_accepts_marketing;

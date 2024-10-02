@@ -1,5 +1,4 @@
 import { EntityManager, In } from 'typeorm';
-import { v4 as uuidv4 } from 'uuid';
 import { AppDataSource } from '../../../config/typeOrmConfig';
 import { LineItem as DomainLineItem, Order } from '../../../domain/entities/Order';
 import { Product } from '../../../domain/entities/Product';
@@ -15,65 +14,45 @@ export class DatabaseRepository implements OutputPort {
     async storeProducts(shopifyProductBatch: ShopifyProductDTO[]): Promise<void> {
         try {
             let shopifyProductDbBatch: ShopifyProduct[] = this.mapShopifyProductDTOToShopifyProduct(shopifyProductBatch);
-
+    
             // Transaction to ensure atomic processing
             return await AppDataSource.transaction(async (entityManager: EntityManager) => {
                 for (let product of shopifyProductDbBatch) {
-                    const existingProduct = await entityManager
-                        .createQueryBuilder(ShopifyProduct, "product")
-                        .where("product.platform_id = :platformId", { platformId: product.platform_id })
-                        .getOne();
-            
+                    const existingProduct = await entityManager.findOne(ShopifyProduct, {
+                        where: { platform_id: product.platform_id },
+                    });
+                    
                     if (existingProduct) {
-                        // Update
-                        await entityManager
-                            .createQueryBuilder()
-                            .update(ShopifyProduct)
-                            .set({
-                                title: product.title,
-                                body_html: product.body_html,
-                                vendor: product.vendor,
-                                product_type: product.product_type,
-                                updated_at: product.updated_at,
-                                published_at: product.published_at,
-                                status: product.status,
-                                tags: product.tags,
-                                admin_graphql_api_id: product.admin_graphql_api_id,
-                            })
-                            .where("platform_id = :platformId", { platformId: product.platform_id })
-                            .execute();
+                        // Update existing product properties
+                        existingProduct.title = product.title;
+                        existingProduct.body_html = product.body_html;
+                        existingProduct.vendor = product.vendor;
+                        existingProduct.product_type = product.product_type;
+                        existingProduct.updated_at = product.updated_at;
+                        existingProduct.published_at = product.published_at;
+                        existingProduct.status = product.status;
+                        existingProduct.tags = product.tags;
+                        existingProduct.admin_graphql_api_id = product.admin_graphql_api_id;
+    
+                        // Save the updated product
+                        await entityManager.save(existingProduct);
                     } else {
-                        // Insert
-                        await entityManager
-                            .createQueryBuilder()
-                            .insert()
-                            .into(ShopifyProduct)
-                            .values({
-                                platform_id: product.platform_id,
-                                title: product.title,
-                                body_html: product.body_html,
-                                vendor: product.vendor,
-                                product_type: product.product_type,
-                                created_at: product.created_at,
-                                updated_at: product.updated_at,
-                                published_at: product.published_at,
-                                status: product.status,
-                                tags: product.tags,
-                                admin_graphql_api_id: product.admin_graphql_api_id,
-                            })
-                            .execute();
+                        // Insert new product
+                        await entityManager.save(product);
                     }
                 }
-            })        
+            });
         } catch (error) {
             console.error("Error on saving products:", error);
             throw new Error("Error on saving products on database.");
         }
     }
+    
 
     mapShopifyProductDTOToShopifyProduct(shopifyProductBatch: ShopifyProductDTO[]): ShopifyProduct[] {
         return shopifyProductBatch.map(dto => {
             return new ShopifyProduct(
+                undefined,
                 dto.id,
                 dto.title,
                 dto.body_html,
@@ -94,15 +73,7 @@ export class DatabaseRepository implements OutputPort {
     async storeOrders(shopifyOrderBatch: ShopifyOrderDTO[]): Promise<void> {
         const ordersToSave: ShopifyOrder[] = []; 
         let lineItemsToSave: Promise<EntityLineItem[]>;
-
-        // Optimize lookups using one find and map 
-        const shopifyOrderRepository = AppDataSource.getRepository(ShopifyOrder);
-        let existingOrders = await shopifyOrderRepository.find({ where: { platform_id: In(shopifyOrderBatch.map(order => order.id)) }});
-        let existingOrdersMap = new Map<string, ShopifyOrder>(
-            existingOrders
-                .filter(order => order !== undefined) 
-                .map(order => [String(order.platform_id), order]
-        ));
+        let { existingOrdersMap, existingLineItemsMap, existingProductsMap } = await this.setupMaps(shopifyOrderBatch);
 
         for (let shopifyOrder of shopifyOrderBatch) {
             // Verify if ShopifyOrder exists
@@ -141,7 +112,7 @@ export class DatabaseRepository implements OutputPort {
                 ordersToSave.push(existingOrder);
             } else {
                 let newShopifyOrder = new ShopifyOrder(
-                    uuidv4(),  // Generate new ID if its new
+                    undefined,
                     shopifyOrder.id, // platform_id
                     shopifyOrder.admin_graphql_api_id,
                     shopifyOrder.buyer_accepts_marketing,
@@ -185,13 +156,15 @@ export class DatabaseRepository implements OutputPort {
                 // Remake the map with the return from save
                 existingOrdersMap = new Map<string, ShopifyOrder>(
                     ordersSaved
-                        .filter(order => order !== undefined) 
-                        .map(order => [String(order.platform_id), order])
+                        .filter((order: ShopifyOrder) => order !== undefined) 
+                        .map((order: ShopifyOrder) => [String(order.platform_id), order])
                 );
 
-                lineItemsToSave = this.processLineItems(existingOrdersMap, shopifyOrderBatch, entityManager)
+                lineItemsToSave = this.processLineItems(
+                    { existingOrdersMap, existingLineItemsMap, existingProductsMap }, shopifyOrderBatch
+                )
 
-                // Reduce the number of queries doing batch operations 2
+                // Batch operation
                 await entityManager.save((await lineItemsToSave));
             });
         } catch (error) {
@@ -202,88 +175,131 @@ export class DatabaseRepository implements OutputPort {
 
     // Decoupling concerns ( LineItems / Orders )
     private async processLineItems(
-        existingOrdersMap: Map<string, ShopifyOrder>, 
-        shopifyOrderBatch: ShopifyOrderDTO[], 
-        entityManager: EntityManager
+        findMaps: {
+            existingOrdersMap: Map<string, ShopifyOrder>;
+            existingLineItemsMap: Map<string, EntityLineItem>;
+            existingProductsMap: Map<string, ShopifyProduct>;
+        },
+        shopifyOrderBatch: ShopifyOrderDTO[]
     ): Promise<EntityLineItem[]> {
+        let { existingOrdersMap, existingLineItemsMap, existingProductsMap } = findMaps;
         const lineItemsToSave = [];
 
-        let ordersIds: string[] = [];
+        let filterOrderIds: string[] = [];
         existingOrdersMap.forEach((value, key) => {
             if (typeof value === 'object' && value !== null) {
-              const { id } = value;
-              ordersIds.push(id);
+              const { platform_id } = value;
+              filterOrderIds.push(String(platform_id));
             }
         });
 
-        let productIdsWithNull: (string | null)[] = []
-        for(let shopifyOrder of shopifyOrderBatch) {
-            const productIds = shopifyOrder.line_items.map(item => item.product_id);
-
-            // Optimize lookups using map
-            const existingProducts = await entityManager.find(ShopifyProduct, { where: { platform_id: In(productIds) }});
-            const existingProductsMap = new Map<string, ShopifyProduct>(
-                existingProducts.map(product => [String(product.platform_id || 'null'), product])
-            );
-
-            // DEPOIS VERIFICAR SE QUANDO product.id FOR NULL VAI BUGAR *****
-            productIdsWithNull.push(...existingProducts.map(product => product.id));
-        }
-
-        // Just 1 query to find
-        const lineItemsFind = await entityManager.find(EntityLineItem, {
-            where: {
-                order: { id: In(ordersIds) },
-                product: { id: In(productIdsWithNull) }
-            },
-            relations: ['order', 'product'],
+        let filterProductIds: (string | null)[] = [];
+        existingProductsMap.forEach((value, key) => {
+            if (typeof value === 'object' && value !== null) {
+              const { platform_id } = value;
+              filterProductIds.push(String(platform_id));
+            }
         });
 
-        for(let shopifyOrder of shopifyOrderBatch) {
-            // Create map to organize LineItems by [productId: quantity]
-            const productIdQuantityMap: { [key: string]: number } = {};
-            
-            //Process lineItemsMap and the quantities
-            for (let dtoLineItem of shopifyOrder.line_items) {
-                const productId = String(dtoLineItem.product_id || null);
+        let filterLineItemsIds: (string | null)[] = [];
+        existingLineItemsMap.forEach((value, key) => {
+            if (typeof value === 'object' && value !== null) {
+              const { platform_id } = value;
+              filterLineItemsIds.push(String(platform_id));
+            }
+        });
 
-                if (dtoLineItem.product_id === null) {
+        // Create map to organize LineItems by [productId (platform_id, or id from shopify): quantity]
+        const productIdQuantityKeyValue: { [key: string]: number } = {};
+        let lineItem;
+        for(let shopifyOrder of shopifyOrderBatch) {
+            for(let lineItemDTO of shopifyOrder.line_items) {
+                lineItem = existingLineItemsMap.get(String(lineItemDTO.id));
+                const productId = String(lineItemDTO.product_id || null);
+
+                if (lineItemDTO.product_id === null) {
                     // GERAR LOGS AQUI ******
                 }
 
                 // If productId is already in the map, sum - as in the case with 13 equal line_items with quantity: 1
-                if (productIdQuantityMap[productId]) {
-                    productIdQuantityMap[productId] += dtoLineItem.quantity || 1;
+                if (productIdQuantityKeyValue[productId]) {
+                    productIdQuantityKeyValue[productId] += lineItemDTO.quantity || 1;
                 } else {
                     // Otherwise, add it to the map 
-                    productIdQuantityMap[productId] = dtoLineItem.quantity || 1;
+                    productIdQuantityKeyValue[productId] = lineItemDTO.quantity || 1;
                 }
-            }
-
-            // Process lineItemsMap and the quantities
-            for (let productId in productIdQuantityMap) {
-                const quantity = productIdQuantityMap[productId];
-
-                // Verify if product already exists
-                let productExistent = existingProductsMap.get(productId) ?? null;
-                
-                let lineItem = lineItemsFind.find(lineItem => )
 
                 if (!lineItem) {
                     // Insert
+                    let productExistent = existingProductsMap.get(productId) ?? null;
                     let shopifyOrderEntity = existingOrdersMap.get(shopifyOrder.id.toString()) ?? null;
+                    
                     // let shopifyOrderEntity = this.mapShopifyOrderDTOToShopifyOrder(shopifyOrder)
-                    lineItem = new EntityLineItem(quantity, productExistent, shopifyOrderEntity);
+                    lineItem = new EntityLineItem(
+                        undefined,
+                        lineItemDTO.id,
+                        lineItemDTO.name,
+                        lineItemDTO.title,
+                        lineItemDTO.price,
+                        lineItemDTO.vendor,
+                        lineItemDTO.quantity, 
+                        productExistent, 
+                        shopifyOrderEntity
+                    );
                 } else {
                     // Update
+                    const quantity = productIdQuantityKeyValue[productId];
                     lineItem.quantity = quantity;
                 }
-
+                
                 lineItemsToSave.push(lineItem);
             }
         }
 
         return lineItemsToSave;
+    }
+
+    async setupMaps(shopifyOrderBatch: ShopifyOrderDTO[]): Promise<{
+        existingOrdersMap: Map<string, ShopifyOrder>;
+        existingLineItemsMap: Map<string, EntityLineItem>;
+        existingProductsMap: Map<string, ShopifyProduct>;
+      }> {
+        // Initialize the maps
+        let existingOrdersMap = new Map<string, ShopifyOrder>();
+        let existingLineItemsMap = new Map<string, EntityLineItem>();
+        let existingProductsMap = new Map<string, ShopifyProduct>();
+
+        // Optimize lookups using one find and map 
+        const shopifyOrderRepository = AppDataSource.getRepository(ShopifyOrder);
+        let existingOrders = await shopifyOrderRepository.find({ where: { platform_id: In(shopifyOrderBatch.map(order => order.id)) }});
+        existingOrdersMap = new Map<string, ShopifyOrder>(
+            existingOrders
+                .filter((order: ShopifyOrder) => order !== undefined) 
+                .map((order: ShopifyOrder) => [String(order.platform_id), order]
+        ));
+
+        const shopifyLineItemRepository = AppDataSource.getRepository(EntityLineItem);
+        let existingLineItems = await shopifyLineItemRepository.find({ where: { platform_id: In(shopifyOrderBatch.map(order => {
+            return order.line_items.map(line_item => line_item.id)
+        })) }});
+        existingLineItemsMap = new Map<string, EntityLineItem>(
+            existingLineItems.map((lineItem: EntityLineItem) => [String(lineItem.platform_id || 'null'), lineItem])
+        );
+
+        let productIds = shopifyOrderBatch.map(order => {
+            return order.line_items.map(line_item => line_item.product_id);
+        })
+        const shopifyProductRepository = AppDataSource.getRepository(ShopifyProduct);
+        const existingProducts = await shopifyProductRepository.find({ where: { platform_id: In(productIds) }});
+        existingProductsMap = new Map<string, ShopifyProduct>(
+            existingProducts.map((product: ShopifyProduct) => [String(product.platform_id || 'null'), product])
+        );
+
+        return {
+            existingOrdersMap,
+            existingLineItemsMap,
+            existingProductsMap,
+        }; 
     }
 
     mapShopifyOrderDTOToShopifyOrder(shopifyOrderDTO: ShopifyOrderDTO): ShopifyOrder {

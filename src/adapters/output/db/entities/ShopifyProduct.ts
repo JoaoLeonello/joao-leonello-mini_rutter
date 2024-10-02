@@ -1,9 +1,11 @@
-import { Column, Entity, PrimaryGeneratedColumn } from 'typeorm';
+import { Column, Entity, OneToMany, PrimaryColumn } from 'typeorm';
+import { v4 as uuidv4 } from 'uuid';
+import { LineItem } from './LineItem';
 
 @Entity('shopify_product')
 export class ShopifyProduct {
-    @PrimaryGeneratedColumn('uuid') 
-    id!: string;
+    @PrimaryColumn('uuid') 
+    id: string;
 
     @Column({ type: 'bigint', unique: true })
     platform_id!: number | null;
@@ -44,7 +46,11 @@ export class ShopifyProduct {
     @Column({ type: 'varchar', length: 255, nullable: true })
     admin_graphql_api_id!: string | null;
 
+    @OneToMany(() => LineItem, (lineItem) => lineItem.product)
+    line_items!: LineItem[];
+
     constructor(
+        id: string = uuidv4(),
         platform_id: number | null = null,
         title: string,
         body_html: string | null,
@@ -59,6 +65,7 @@ export class ShopifyProduct {
         tags: string | null = null,
         admin_graphql_api_id: string | null = null
     ) {
+        this.id = id;
         this.platform_id = platform_id;
         this.title = title;
         this.body_html = body_html;

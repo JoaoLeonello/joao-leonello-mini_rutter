@@ -11,8 +11,6 @@ export class CreateProductsAndOrders1633500000000 implements MigrationInterface 
                         type: 'char',
                         length: '36',
                         isPrimary: true,
-                        isGenerated: true,
-                        generationStrategy: 'uuid',
                     },
                     {
                         name: 'platform_id',
@@ -98,8 +96,7 @@ export class CreateProductsAndOrders1633500000000 implements MigrationInterface 
                     },
                     {
                         name: 'platform_id',
-                        type: 'char',
-                        length: '36',
+                        type: 'bigint',
                     },
                     {
                         name: 'admin_graphql_api_id',
@@ -330,8 +327,30 @@ export class CreateProductsAndOrders1633500000000 implements MigrationInterface 
                         type: 'char',
                         length: '36',
                         isPrimary: true,
-                        isGenerated: true,
-                        generationStrategy: 'uuid',
+                    },
+                    {
+                        name: 'platform_id',
+                        type: 'bigint',
+                    },
+                    {
+                        name: 'name',
+                        type: 'varchar',
+                        length: '255',
+                    },
+                    {
+                        name: 'title',
+                        type: 'varchar',
+                        length: '255',
+                    },
+                    {
+                        name: 'price',
+                        type: 'varchar',
+                        length: '255',
+                    },
+                    {
+                        name: 'vendor',
+                        type: 'varchar',
+                        length: '255',
                     },
                     {
                         name: 'quantity',
