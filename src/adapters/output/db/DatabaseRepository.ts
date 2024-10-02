@@ -1,4 +1,4 @@
-import { EntityManager, In, getRepository } from 'typeorm';
+import { EntityManager, In } from 'typeorm';
 import { v4 as uuidv4 } from 'uuid';
 import { AppDataSource } from '../../../config/typeOrmConfig';
 import { LineItem as DomainLineItem, Order } from '../../../domain/entities/Order';
@@ -189,15 +189,10 @@ export class DatabaseRepository implements OutputPort {
                         .map(order => [String(order.platform_id), order])
                 );
 
-                let shopifyOrderBatchIds = shopifyOrderBatch.map(order => order.id)
-                lineItemsToSave = this.processLineItems(existingOrdersMap, shopifyOrderBatch, entityManager, shopifyOrderBatchIds)
+                lineItemsToSave = this.processLineItems(existingOrdersMap, shopifyOrderBatch, entityManager)
 
                 // Reduce the number of queries doing batch operations 2
-                const resolvedLineItems = await lineItemsToSave;
-                const resolvedLineItemsPromises = await entityManager.save(resolvedLineItems);
-                // const resolvedLineItemsPromises = await Promise.all(lineItemsToSave);
-                const flattenedLineItems = resolvedLineItemsPromises.reduce<EntityLineItem[]>((acc, val) => acc.concat(val), []);
-                await entityManager.save(flattenedLineItems);
+                await entityManager.save((await lineItemsToSave));
             });
         } catch (error) {
             console.error("Error on saving orders:", error);
@@ -209,13 +204,21 @@ export class DatabaseRepository implements OutputPort {
     private async processLineItems(
         existingOrdersMap: Map<string, ShopifyOrder>, 
         shopifyOrderBatch: ShopifyOrderDTO[], 
-        entityManager: EntityManager, 
-        batchOrdersIds: Array<number>
+        entityManager: EntityManager
     ): Promise<EntityLineItem[]> {
         const lineItemsToSave = [];
 
+        let ordersIds: string[] = [];
+        existingOrdersMap.forEach((value, key) => {
+            if (typeof value === 'object' && value !== null) {
+              const { id } = value;
+              ordersIds.push(id);
+            }
+        });
+
+        let productIdsWithNull: (string | null)[] = []
         for(let shopifyOrder of shopifyOrderBatch) {
-            const productIds = shopifyOrder.line_items.map(item => item.product_id).filter(Boolean);
+            const productIds = shopifyOrder.line_items.map(item => item.product_id);
 
             // Optimize lookups using map
             const existingProducts = await entityManager.find(ShopifyProduct, { where: { platform_id: In(productIds) }});
@@ -223,28 +226,30 @@ export class DatabaseRepository implements OutputPort {
                 existingProducts.map(product => [String(product.platform_id || 'null'), product])
             );
 
-            const productIdsWithNull: (number | null)[] = [...productIds, null];
+            // DEPOIS VERIFICAR SE QUANDO product.id FOR NULL VAI BUGAR *****
+            productIdsWithNull.push(...existingProducts.map(product => product.id));
+        }
 
-            const lineItems = await entityManager.find(EntityLineItem, {
-                where: {
-                    order: { id: In(batchOrdersIds) },
-                    product: { id: In(productIdsWithNull) }
-                }
-            });
+        // Just 1 query to find
+        const lineItemsFind = await entityManager.find(EntityLineItem, {
+            where: {
+                order: { id: In(ordersIds) },
+                product: { id: In(productIdsWithNull) }
+            },
+            relations: ['order', 'product'],
+        });
 
-            // Create lineItems map
-            const lineItemsMap = new Map<string, EntityLineItem>(
-                lineItems.map(item => [
-                `${item?.order?.id ?? 'undefined'}-${item.product?.id ?? 'undefined'}`,
-                item
-                ])
-            );
-
+        for(let shopifyOrder of shopifyOrderBatch) {
             // Create map to organize LineItems by [productId: quantity]
             const productIdQuantityMap: { [key: string]: number } = {};
             
+            //Process lineItemsMap and the quantities
             for (let dtoLineItem of shopifyOrder.line_items) {
                 const productId = String(dtoLineItem.product_id || null);
+
+                if (dtoLineItem.product_id === null) {
+                    // GERAR LOGS AQUI ******
+                }
 
                 // If productId is already in the map, sum - as in the case with 13 equal line_items with quantity: 1
                 if (productIdQuantityMap[productId]) {
@@ -255,15 +260,14 @@ export class DatabaseRepository implements OutputPort {
                 }
             }
 
-            // Process lineItemsMap
+            // Process lineItemsMap and the quantities
             for (let productId in productIdQuantityMap) {
                 const quantity = productIdQuantityMap[productId];
 
                 // Verify if product already exists
                 let productExistent = existingProductsMap.get(productId) ?? null;
                 
-                const lineItemKey = `${shopifyOrder.id}-${productExistent ? productId : 'undefined'}`;
-                let lineItem = lineItemsMap.get(lineItemKey);
+                let lineItem = lineItemsFind.find(lineItem => )
 
                 if (!lineItem) {
                     // Insert
