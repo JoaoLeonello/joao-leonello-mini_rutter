@@ -7,7 +7,7 @@ import { setupDependencyInjection } from './config/dependencyInjection';
 import { TsyringeAdapter } from './config/tsyringeAdapter';
 import { AppDataSource } from './config/typeOrmConfig';
 
-// Configuração para o routing-controllers usar o tsyringe como container
+// routing-cntrollers using tysyringe as DI container
 useContainer(new TsyringeAdapter(container));
 
 // Setup the dependency injection

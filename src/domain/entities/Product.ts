@@ -10,4 +10,15 @@ export class Product {
     this._platformId = platformId;
     this._name = name;
   }
+  get id(): string {
+    return this._id;
+  }
+
+  get platformId(): string {
+    return this._platformId;
+  }
+
+  get name(): string {
+    return this._name;
+  }
 }

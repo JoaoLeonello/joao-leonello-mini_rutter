@@ -1,9 +1,9 @@
 import { ShopifyRepository } from '../ShopifyRepository';
 import { ClientDetailsDTO, LineItemDTO, MoneyDTO, MoneySetDTO, ShopifyOrderDTO, TaxLineDTO } from '../dto/ShopifyOrderDTO';
 import { ImageDTO, OptionDTO, ShopifyProductDTO, VariantDTO } from '../dto/ShopifyProductDTO';
-import { shopifyApi } from '../dto/ShopifyProductRequest';
+import { shopifyApi } from '../requests/ShopifyRequests';
 
-jest.mock('../dto/ShopifyProductRequest.ts', () => ({
+jest.mock('../requests/ShopifyRequests.ts', () => ({
   shopifyApi: {
     get: jest.fn(),
   },

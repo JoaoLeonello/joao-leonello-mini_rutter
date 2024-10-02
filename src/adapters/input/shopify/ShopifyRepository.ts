@@ -2,7 +2,7 @@
 import { ShopifyInputPort } from "../../../ports/input/InputPort";
 import { ShopifyOrderDTO } from "./dto/ShopifyOrderDTO";
 import { ShopifyProductDTO } from "./dto/ShopifyProductDTO";
-import { shopifyApi } from "./dto/ShopifyProductRequest";
+import { shopifyApi } from "./requests/ShopifyRequests";
 
 export class ShopifyRepository implements ShopifyInputPort {
   private shopifyProductUrl: string = "/products.json";
@@ -15,7 +15,11 @@ export class ShopifyRepository implements ShopifyInputPort {
 
     while (nextPageUrl) {
       let productsBatch: ShopifyProductDTO[] = [];
-      const response: any = await shopifyApi.get(nextPageUrl);
+      const response: any = await shopifyApi.get(nextPageUrl, {
+        params: {
+          limit: 50
+        }
+      });
 
       // Populate with data from Shopify API
       productsBatch = response.data.products as ShopifyProductDTO[];
@@ -43,7 +47,11 @@ export class ShopifyRepository implements ShopifyInputPort {
 
     while (nextPageUrl && this.totalOrdersFetched < this.maxOrders) {
       let ordersBatch: ShopifyOrderDTO[] = [];
-      const response: any = await shopifyApi.get(nextPageUrl);
+      const response: any = await shopifyApi.get(nextPageUrl, {
+        params: {
+          limit: 1
+        }
+      });
 
       // Populate with data from Shopify API
       ordersBatch = response.data.orders as ShopifyOrderDTO[];
