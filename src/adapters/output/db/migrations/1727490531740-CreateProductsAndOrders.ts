@@ -17,6 +17,11 @@ export class CreateProductsAndOrders1633500000000 implements MigrationInterface 
                         type: 'bigint',
                     },
                     {
+                        name: 'name',
+                        type: 'varchar',
+                        length: '255',
+                    },
+                    {
                         name: 'title',
                         type: 'varchar',
                         length: '255',

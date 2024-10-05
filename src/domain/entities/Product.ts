@@ -2,7 +2,7 @@ import { v4 as uuidv4 } from 'uuid';
 
 export class Product {
   private _id: string;
-  private _platformId: number | null;
+  _platformId: number | null;
   private _name: string | null;
   private _title: string | null;
   private _bodyHtml: string | null;

@@ -25,14 +25,14 @@ export class OrderRepository implements ShopifyOrdersOutputPort {
 
         for (let order of shopifyOrderBatch) {
             // Verify if ShopifyOrder exists
-            if (this.existingOrdersMap.has(order.platformId)) {
-                let existingOrder: ShopifyOrder = this.existingOrdersMap.get(order.platformId)!;
+            if (this.existingOrdersMap.has(order.platformId ?? '')) {
+                let existingOrder: ShopifyOrder = this.existingOrdersMap.get(order.platformId ?? '')!;
                 this.updateShopifyOrder(existingOrder, order);
                 ordersToSave.push(existingOrder);
             } else {
                 let newShopifyOrder = new ShopifyOrder(
                     order.id,
-                    parseInt(order.platformId),
+                    parseInt(order.platformId ?? '0'),
                     order.adminGraphqlApiId ?? '',
                     order.buyerAcceptsMarketing ?? false,
                     order.confirmationNumber ?? '',
@@ -98,7 +98,7 @@ export class OrderRepository implements ShopifyOrdersOutputPort {
         const productIdQuantityKeyValue: { [key: string]: number } = {};
         let existingLineItem;
         for(let shopifyOrder of shopifyOrderBatch) {
-            for(let lineItem of shopifyOrder.lineItems) {
+            for(let lineItem of shopifyOrder.lineItems ?? []) {
                 existingLineItem = this.existingLineItemsMap.get(String(lineItem.id));
                 const productId = String(lineItem.productId || null);
 

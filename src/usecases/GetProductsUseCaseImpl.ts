@@ -1,8 +1,8 @@
-import { ShopifyProduct } from './../adapters/output/db/entities/ShopifyProduct';
-import { ProductRepository } from 'adapters/output/db/ProductRepository';
 import { injectable } from 'tsyringe';
 import { Product } from '../domain/entities/Product';
 import { GetProductsUseCase } from '../usecases/interfaces/GetProductsUseCase';
+import { ShopifyProduct } from './../adapters/output/db/entities/ShopifyProduct';
+import { ProductRepository } from './../adapters/output/db/ProductRepository';
 
 @injectable()
 export class GetProductsUseCaseImpl implements GetProductsUseCase {
@@ -13,7 +13,8 @@ export class GetProductsUseCaseImpl implements GetProductsUseCase {
 
   async execute(): Promise<Product[]> {
     let products = await this.productRepository.getProducts()
-    return products.map((product: ShopifyProduct) => this.toDomain(product));
+    let productsDomain = products.map((product: ShopifyProduct) => this.toDomain(product));
+    return productsDomain.map((product: Product) => this.filterFields(product, ['_id', '_platformId', '_name'])); 
   }
 
   toDomain(shopifyProduct: ShopifyProduct): Product {
@@ -34,5 +35,14 @@ export class GetProductsUseCaseImpl implements GetProductsUseCase {
       shopifyProduct.tags,
       shopifyProduct.admin_graphql_api_id
     );
+  }
+
+  filterFields(obj: any, fields: string[]): any {
+    return Object.keys(obj)
+      .filter(key => fields.includes(key) && obj[key] !== null)
+      .reduce((result: Record<string, any>, key) => {
+        result[key] = obj[key];
+        return result;
+      }, {});
   }
 }

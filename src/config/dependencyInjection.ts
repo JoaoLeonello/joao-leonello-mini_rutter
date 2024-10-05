@@ -1,8 +1,9 @@
 import { container } from 'tsyringe';
-import { ShopifyRepository } from '../adapters/input/shopify/ShopifyRepository';
-import { DatabaseRepository } from '../adapters/output/db/DatabaseRepository';
-import { ShopifyInputPort } from '../ports/input/InputPort';
-import { OutputPort } from '../ports/output/OutputPort';
+import { ShopifyOrdersRepository } from '../adapters/input/shopify/ShopifyOrdersRepository';
+import { ShopifyProductRepository } from '../adapters/input/shopify/ShopifyProductRepository';
+import { OrderRepository } from '../adapters/output/db/OrderRepository';
+import { ProductRepository } from '../adapters/output/db/ProductRepository';
+import { ShopifyOrdersInputPort, ShopifyProductsInputPort } from '../ports/input/InputPort';
 import { GetOrdersUseCaseImpl } from '../usecases/GetOrdersUseCaseImpl';
 import { GetProductsUseCaseImpl } from '../usecases/GetProductsUseCaseImpl';
 import { GetOrdersUseCase } from '../usecases/interfaces/GetOrdersUseCase';
@@ -13,12 +14,20 @@ import { SyncOrdersUseCaseImpl } from '../usecases/SyncOrdersUseCaseImpl';
 import { SyncProductsUseCaseImpl } from '../usecases/SyncProductsUseCaseImpl';
 
 export function setupDependencyInjection() {
-    container.register<ShopifyInputPort>('ShopifyInputPort', {
-        useClass: ShopifyRepository
+    container.register<ShopifyProductsInputPort>('ShopifyProductsInputPort', {
+        useClass: ShopifyProductRepository
     });
 
-    container.register<OutputPort>('OutputPort', {
-        useClass: DatabaseRepository
+    container.register<ShopifyOrdersInputPort>('ShopifyOrdersInputPort', {
+        useClass: ShopifyOrdersRepository
+    });
+
+    container.register<ProductRepository>('ShopifyProductsOutputPort', {
+        useClass: ProductRepository
+    });
+
+    container.register<OrderRepository>('ShopifyOrdersOutputPort', {
+        useClass: OrderRepository
     });
 
     container.register<SyncProductsUseCase>('SyncProductsUseCase', {

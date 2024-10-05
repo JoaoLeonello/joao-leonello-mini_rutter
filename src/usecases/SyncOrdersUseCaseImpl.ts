@@ -1,5 +1,5 @@
-import { LineItem } from 'domain/entities/LineItem';
-import { Order } from 'domain/entities/Order';
+import { LineItem } from '../domain/entities/LineItem';
+import { Order } from '../domain/entities/Order';
 import { inject, injectable } from 'tsyringe';
 import { LineItemDTO, ShopifyOrderDTO } from '../adapters/input/shopify/dto/ShopifyOrderDTO';
 import { ShopifyOrdersInputPort } from '../ports/input/InputPort';
@@ -10,8 +10,8 @@ import { SyncOrdersUseCase } from '../usecases/interfaces/SyncOrdersUseCase';
 export class SyncOrdersUseCaseImpl implements SyncOrdersUseCase {
   
   constructor(
-    @inject('ShopifyInputPort') private inputPort: ShopifyOrdersInputPort,
-    @inject('OutputPort') private outputPort: ShopifyOrdersOutputPort
+    @inject('ShopifyOrdersInputPort') private inputPort: ShopifyOrdersInputPort,
+    @inject('ShopifyOrdersOutputPort') private outputPort: ShopifyOrdersOutputPort
   ) {}
 
   async *execute(): AsyncGenerator<void> {

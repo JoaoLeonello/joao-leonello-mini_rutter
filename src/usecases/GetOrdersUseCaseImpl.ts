@@ -1,6 +1,6 @@
-import { OrderRepository } from 'adapters/output/db/OrderRepository';
-import { LineItem } from 'domain/entities/LineItem';
 import { injectable } from 'tsyringe';
+import { OrderRepository } from '../adapters/output/db/OrderRepository';
+import { LineItem } from '../domain/entities/LineItem';
 import { Order } from '../domain/entities/Order';
 import { GetOrdersUseCase } from '../usecases/interfaces/GetOrdersUseCase';
 import { ShopifyOrder } from './../adapters/output/db/entities/ShopifyOrder';

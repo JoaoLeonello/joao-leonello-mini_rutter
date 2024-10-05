@@ -14,7 +14,9 @@ export class ShopifySyncController {
     ) {}
   
     @Get('/products')
-    async fetchAndStoreProducts(_: Response) {
+    async fetchAndStoreProducts(
+    // @QueryParams() queryParams: any,  /products?category=electronics&priceMin=100&priceMax=1000
+    _: Response) {
         try {
             const results = [];
             
