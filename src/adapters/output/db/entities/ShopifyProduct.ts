@@ -11,7 +11,10 @@ export class ShopifyProduct {
     platform_id!: number | null;
 
     @Column({ type: 'varchar', length: 255 })
-    title!: string;
+    name!: string | null;
+
+    @Column({ type: 'varchar', length: 255 })
+    title!: string | null;
 
     @Column({ type: 'text', nullable: true })
     body_html!: string | null;
@@ -52,7 +55,8 @@ export class ShopifyProduct {
     constructor(
         id: string = uuidv4(),
         platform_id: number | null = null,
-        title: string,
+        name: string | null,
+        title: string | null,
         body_html: string | null,
         vendor: string | null,
         product_type: string | null,
@@ -67,6 +71,7 @@ export class ShopifyProduct {
     ) {
         this.id = id;
         this.platform_id = platform_id;
+        this.name = name;
         this.title = title;
         this.body_html = body_html;
         this.vendor = vendor;

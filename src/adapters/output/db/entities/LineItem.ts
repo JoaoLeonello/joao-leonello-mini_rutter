@@ -28,7 +28,7 @@ export class LineItem {
 
     @ManyToOne(() => ShopifyProduct, { nullable: true })
     @JoinColumn({ name: 'product_id' })
-    product: ShopifyProduct | null;
+    product: ShopifyProduct | null | undefined;
 
     @ManyToOne(() => ShopifyOrder, (shopifyOrder) => shopifyOrder.line_items)
     @JoinColumn({ name: 'order_id' })

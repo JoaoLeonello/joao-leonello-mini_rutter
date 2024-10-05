@@ -3,7 +3,10 @@ import { ShopifyProductDTO } from "../../adapters/input/shopify/dto/ShopifyProdu
 
 import { Product } from '../../domain/entities/Product';
 
-export interface ShopifyInputPort {
+export interface ShopifyProductsInputPort {
   fetchProductsInBatches(): AsyncGenerator<ShopifyProductDTO[]>;
-  fetchOrdersInBatches(): AsyncGenerator<ShopifyOrderDTO[]>
+}
+
+export interface ShopifyOrdersInputPort {
+  fetchOrdersInBatches(): AsyncGenerator<ShopifyOrderDTO[]>;
 }
