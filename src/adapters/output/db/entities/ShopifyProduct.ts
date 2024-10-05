@@ -69,20 +69,20 @@ export class ShopifyProduct {
         tags: string | null = null,
         admin_graphql_api_id: string | null = null
     ) {
-        this.id = id;
+        this.id = id ?? uuidv4();;
         this.platform_id = platform_id;
-        this.name = name;
-        this.title = title;
-        this.body_html = body_html;
-        this.vendor = vendor;
-        this.product_type = product_type;
+        this.name = name ?? null;
+        this.title = title ?? null;
+        this.body_html = body_html ?? null;
+        this.vendor = vendor ?? null;
+        this.product_type = product_type ?? null;
         this.created_at = created_at;
         this.updated_at = updated_at;
-        this.status = status;
-        this.published_at = published_at;
-        this.template_suffix = template_suffix;
-        this.published_scope = published_scope;
-        this.tags = tags;
-        this.admin_graphql_api_id = admin_graphql_api_id;
+        this.status = status ?? '';
+        this.published_at = published_at ?? null;
+        this.template_suffix = template_suffix ?? null;
+        this.published_scope = published_scope ?? null;
+        this.tags = tags ?? null;
+        this.admin_graphql_api_id = admin_graphql_api_id ?? null;
     }
 }

@@ -14,7 +14,30 @@ export class GetOrdersUseCaseImpl implements GetOrdersUseCase {
 
   async execute(): Promise<Order[]> {
     let orders = await this.orderRepository.getOrders()
-    return orders.map((order: ShopifyOrder) => this.toDomain(order));
+    let ordersDomain = orders.map((order: ShopifyOrder) => this.toDomain(order));
+    
+    return ordersDomain.map((order: Order) => {
+      // First, filter fields from order
+      let filteredOrder = this.filterFields(order, ['_id', '_platformId', '_lineItems']);
+  
+      // Second, filter line_items fields
+      if (filteredOrder._lineItems) {
+        let expandedLineItems: any[] = [];
+        filteredOrder._lineItems.forEach((lineItem: any) => {
+          // Define null if there is no value
+          const productId = lineItem._productId ? lineItem._productId : null;
+          const filteredLineItem = { product_id: productId };
+  
+          // Multiply line item by quantity and push to array expandedLineItems
+          for (let i = 0; i < (lineItem._quantity || 1); i++) {
+            expandedLineItems.push(filteredLineItem);
+          }
+        });
+        filteredOrder._lineItems = expandedLineItems;
+      }
+  
+      return filteredOrder;
+    });
   }
 
   toDomain(shopifyOrder: ShopifyOrder): Order {
@@ -36,7 +59,7 @@ export class GetOrdersUseCaseImpl implements GetOrdersUseCase {
       shopifyOrder.buyer_accepts_marketing,
       shopifyOrder.confirmation_number,
       shopifyOrder.confirmed,
-      new Date(shopifyOrder.created_at),
+      new Date(shopifyOrder.created_at ?? new Date()),
       shopifyOrder.currency,
       shopifyOrder.current_subtotal_price,
       shopifyOrder.current_total_price,
@@ -46,7 +69,7 @@ export class GetOrdersUseCaseImpl implements GetOrdersUseCase {
       shopifyOrder.name,
       shopifyOrder.order_number,
       shopifyOrder.presentment_currency,
-      new Date(shopifyOrder.processed_at),
+      new Date(shopifyOrder.processed_at ?? new Date()),
       shopifyOrder.source_name,
       shopifyOrder.subtotal_price,
       shopifyOrder.tags,
@@ -60,5 +83,14 @@ export class GetOrdersUseCaseImpl implements GetOrdersUseCase {
       shopifyOrder.checkout_id,
       shopifyOrder.checkout_token
     );
+  }
+
+  filterFields(obj: any, fields: string[]): any {
+    return Object.keys(obj)
+      .filter(key => fields.includes(key) && obj[key] !== null)
+      .reduce((result: Record<string, any>, key) => {
+        result[key] = obj[key];
+        return result;
+      }, {});
   }
 }

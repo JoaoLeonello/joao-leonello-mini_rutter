@@ -4,7 +4,7 @@ import { LineItem } from './LineItem';
 export class Order {
   private _id: string;
   private _platformId: string;
-  private _lineItems: LineItem[];
+  private _lineItems!: LineItem[] | null | undefined;
   private _adminGraphqlApiId: string | undefined;
   private _buyerAcceptsMarketing: boolean | undefined;
   private _confirmationNumber: string | undefined;
@@ -36,21 +36,21 @@ export class Order {
   constructor(
     id: string = uuidv4(),
     platformId: string,
-    lineItems: LineItem[],
-    adminGraphqlApiId?: string,
-    buyerAcceptsMarketing?: boolean,
-    confirmationNumber?: string,
-    confirmed?: boolean,
-    createdAt?: Date,
-    currency?: string,
-    currentSubtotalPrice?: string,
-    currentTotalPrice?: string,
-    currentTotalTax?: string,
-    customerLocale?: string,
-    financialStatus?: string,
-    name?: string,
-    orderNumber?: number,
-    presentmentCurrency?: string,
+    lineItems?: LineItem[] | null | undefined,
+    adminGraphqlApiId?: string | undefined,
+    buyerAcceptsMarketing?: boolean | undefined,
+    confirmationNumber?: string | undefined,
+    confirmed?: boolean | undefined,
+    createdAt?: Date | undefined,
+    currency?: string | undefined,
+    currentSubtotalPrice?: string | undefined,
+    currentTotalPrice?: string | undefined,
+    currentTotalTax?: string | undefined,
+    customerLocale?: string | undefined,
+    financialStatus?: string | undefined,
+    name?: string | undefined,
+    orderNumber?: number | undefined,
+    presentmentCurrency?: string | undefined,
     processedAt?: Date,
     sourceName?: string,
     subtotalPrice?: string,
@@ -107,7 +107,7 @@ export class Order {
   }
 
   get lineItems(): LineItem[] | undefined {
-    return this._lineItems;
+    return this._lineItems ?? undefined;
   }
 
   get adminGraphqlApiId(): string | undefined {

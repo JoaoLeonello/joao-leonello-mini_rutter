@@ -20,6 +20,8 @@ export class OrderRepository implements ShopifyOrdersOutputPort {
 
     async storeOrders(shopifyOrderBatch: Order[]): Promise<void> {
         const ordersToSave: ShopifyOrder[] = []; 
+        const ordersToUpdate: ShopifyOrder[] = [];
+
         let lineItemsToSave: Promise<EntityLineItem[]>;
         await this.setupMaps(shopifyOrderBatch);
 
@@ -28,7 +30,7 @@ export class OrderRepository implements ShopifyOrdersOutputPort {
             if (this.existingOrdersMap.has(order.platformId ?? '')) {
                 let existingOrder: ShopifyOrder = this.existingOrdersMap.get(order.platformId ?? '')!;
                 this.updateShopifyOrder(existingOrder, order);
-                ordersToSave.push(existingOrder);
+                ordersToUpdate.push(existingOrder);
             } else {
                 let newShopifyOrder = new ShopifyOrder(
                     order.id,
@@ -68,21 +70,62 @@ export class OrderRepository implements ShopifyOrdersOutputPort {
 
         try {
             // Transaction to ensure atomic processing
-            return await AppDataSource.transaction(async (entityManager: EntityManager) => {  
-                // Reduce the number of queries doing batch operations 1  
-                let ordersSaved = await entityManager.save(ordersToSave);
+            return await AppDataSource.transaction(async (entityManager: EntityManager) => { 
+                if (ordersToSave.length) {
+                    await entityManager.save(ordersToSave);
 
-                // Remake the map with the return from save
-                this.existingOrdersMap = new Map<string, ShopifyOrder>(
-                    ordersSaved
-                        .filter((order: ShopifyOrder) => order !== undefined) 
-                        .map((order: ShopifyOrder) => [String(order.platform_id), order])
-                );
+                    lineItemsToSave = this.processLineItems(shopifyOrderBatch)
 
-                lineItemsToSave = this.processLineItems(shopifyOrderBatch)
+                    // Batch operation
+                    let test = await lineItemsToSave;
+                    await entityManager.save(test);
+                } 
+                if (ordersToUpdate.length) {
+                    await Promise.all(
+                        ordersToUpdate.map(order =>
+                          entityManager.update(
+                            ShopifyOrder,
+                            { id: order.id }, 
+                            {
+                              platform_id: order.platform_id,
+                              admin_graphql_api_id: order.admin_graphql_api_id,
+                              buyer_accepts_marketing: order.buyer_accepts_marketing,
+                              confirmation_number: order.confirmation_number,
+                              confirmed: order.confirmed,
+                              created_at: order.created_at,
+                              currency: order.currency,
+                              current_subtotal_price: order.current_subtotal_price,
+                              current_total_price: order.current_total_price,
+                              current_total_tax: order.current_total_tax,
+                              customer_locale: order.customer_locale,
+                              financial_status: order.financial_status,
+                              name: order.name,
+                              order_number: order.order_number,
+                              presentment_currency: order.presentment_currency,
+                              processed_at: order.processed_at,
+                              source_name: order.source_name,
+                              subtotal_price: order.subtotal_price,
+                              tags: order.tags,
+                              tax_exempt: order.tax_exempt,
+                              total_discounts: order.total_discounts,
+                              total_line_items_price: order.total_line_items_price,
+                              total_price: order.total_price,
+                              total_tax: order.total_tax,
+                              user_id: order.user_id,
+                              updated_at: order.updated_at,
+                              checkout_id: order.checkout_id,
+                              checkout_token: order.checkout_token,
+                            }
+                          )
+                        )
+                    );      
+                    
+                    lineItemsToSave = this.processLineItems(shopifyOrderBatch)
 
-                // Batch operation
-                await entityManager.save((await lineItemsToSave));
+                    // Batch operation
+                    let test = await lineItemsToSave;
+                    await entityManager.save(test);
+                }
             });
         } catch (error) {
             console.error("Error on saving orders:", error);
@@ -92,18 +135,21 @@ export class OrderRepository implements ShopifyOrdersOutputPort {
 
     // Decoupling concerns ( LineItems / Orders )
     private async processLineItems(shopifyOrderBatch: Order[]): Promise<EntityLineItem[]> {
-        const lineItemsToSave = [];
+        const lineItemsToSaveMap = new Map();
 
         // Create map to organize LineItems by [productId (platform_id, or id from shopify): quantity]
         const productIdQuantityKeyValue: { [key: string]: number } = {};
-        let existingLineItem;
+
         for(let shopifyOrder of shopifyOrderBatch) {
             for(let lineItem of shopifyOrder.lineItems ?? []) {
-                existingLineItem = this.existingLineItemsMap.get(String(lineItem.id));
+                let existingLineItem = this.existingLineItemsMap.get(String(lineItem.platformId));
+
                 const productId = String(lineItem.productId || null);
 
                 if (lineItem.productId === null) {
                     // GERAR LOGS AQUI ******
+                    console.warn(`Skipping line item ${lineItem.id} as it has no linked product.`);
+                    continue;
                 }
 
                 // If productId is already in the map, sum - as in the case with 13 equal line_items with quantity: 1
@@ -117,19 +163,55 @@ export class OrderRepository implements ShopifyOrdersOutputPort {
                 if (!existingLineItem) {
                     // Insert
                     let productExistent = this.existingProductsMap.get(productId) ?? null;
-                    let shopifyOrderEntity = this.existingOrdersMap.get(shopifyOrder.id.toString()) ?? null;
+                    let orderExistent = this.existingOrdersMap.get(shopifyOrder.platformId ?? '') ?? null;
+
+                    const productReference = new ShopifyProduct(
+                        productExistent ? productExistent.id : (lineItem.productId ?? undefined),
+                        productExistent ? productExistent?.platform_id : parseInt(productId, 10),
+                        null,
+                        null,
+                        null,
+                        null,
+                        null,
+                        new Date(),
+                        new Date(),
+                        '',
+                        null,
+                        null,
+                        null,
+                        null,
+                        null,
+                    );
+
+                    const orderReference = new ShopifyOrder(
+                        orderExistent ? orderExistent.id : shopifyOrder.id,
+                        parseInt(shopifyOrder.platformId ?? '', 10),
+                        '',
+                        undefined,
+                        '',
+                        undefined,
+                        new Date(),
+                        '',
+                        '',
+                        '',
+                        '',
+                        '',
+                        '',
+                        '',
+                        undefined,
+                        '',
+                    )
                     
-                    // let shopifyOrderEntity = this.mapShopifyOrderDTOToShopifyOrder(shopifyOrder)
                     existingLineItem = new EntityLineItem(
                         undefined,
-                        parseInt(lineItem.id, 10),
+                        lineItem.platformId,
                         lineItem.name,
                         lineItem.title,
                         lineItem.price,
                         lineItem.vendor,
-                        lineItem.quantity, 
-                        productExistent, 
-                        shopifyOrderEntity
+                        productIdQuantityKeyValue[productId], 
+                        productExistent ? productExistent : productReference, 
+                        orderExistent ? orderExistent : orderReference
                     );
                 } else {
                     // Update
@@ -137,17 +219,21 @@ export class OrderRepository implements ShopifyOrdersOutputPort {
                     existingLineItem.quantity = quantity;
                 }
                 
-                lineItemsToSave.push(existingLineItem);
+                lineItemsToSaveMap.set(productId, existingLineItem);
             }
         }
 
+        const lineItemsToSave = Array.from(lineItemsToSaveMap.values());
         return lineItemsToSave;
     }
 
     async setupMaps(shopifyOrderBatch: Order[]) {
         // Optimize lookups using one find and map 
         const shopifyOrderRepository = AppDataSource.getRepository(ShopifyOrder);
-        let existingOrders = await shopifyOrderRepository.find({ where: { platform_id: In(shopifyOrderBatch.map(order => order.id)) }});
+        let existingOrders = await shopifyOrderRepository.find({
+            where: { platform_id: In(shopifyOrderBatch.map(order => order.platformId)) },
+            relations: [], 
+          });
         this.existingOrdersMap = new Map<string, ShopifyOrder>(
             existingOrders
                 .filter((order: ShopifyOrder) => order !== undefined) 
@@ -156,14 +242,14 @@ export class OrderRepository implements ShopifyOrdersOutputPort {
 
         const shopifyLineItemRepository = AppDataSource.getRepository(EntityLineItem);
         let existingLineItems = await shopifyLineItemRepository.find({ where: { platform_id: In(shopifyOrderBatch.map(order => {
-            return order.lineItems?.map(line_item => line_item.id)
+            return order.lineItems?.map(line_item => line_item.platformId)
         })) }});
         this.existingLineItemsMap = new Map<string, EntityLineItem>(
             existingLineItems.map((lineItem: EntityLineItem) => [String(lineItem.platform_id || 'null'), lineItem])
         );
 
         let productIds = shopifyOrderBatch.map(order => {
-            return order.lineItems?.map(line_item => line_item.id);
+            return order.lineItems?.map(line_item => line_item.productId);
         })
         const shopifyProductRepository = AppDataSource.getRepository(ShopifyProduct);
         const existingProducts = await shopifyProductRepository.find({ where: { platform_id: In(productIds) }});
@@ -200,22 +286,8 @@ export class OrderRepository implements ShopifyOrdersOutputPort {
         existingOrder.updated_at = order.updatedAt!;
         existingOrder.checkout_id = order.checkoutId!;
         existingOrder.checkout_token = order.checkoutToken!;
-        
-        existingOrder.line_items = order.lineItems?.map(lineItem => {
-            const product = this.existingProductsMap.get(lineItem.productId ?? '') ?? null;
-            const orderEntity = this.existingOrdersMap.get(order.id ?? '') ?? null;
-            return new EntityLineItem(
-                lineItem.id,
-                lineItem.platformId,
-                lineItem.name,
-                lineItem.title,
-                lineItem.price,
-                lineItem.vendor,
-                lineItem.quantity,
-                product,
-                orderEntity
-            );
-        }) || [];
+
+        existingOrder.line_items = null;
     }
 
     async getOrders(): Promise<ShopifyOrder[]> {

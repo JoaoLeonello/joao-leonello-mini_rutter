@@ -1,7 +1,7 @@
-import { LineItem } from '../domain/entities/LineItem';
-import { Order } from '../domain/entities/Order';
 import { inject, injectable } from 'tsyringe';
 import { LineItemDTO, ShopifyOrderDTO } from '../adapters/input/shopify/dto/ShopifyOrderDTO';
+import { LineItem } from '../domain/entities/LineItem';
+import { Order } from '../domain/entities/Order';
 import { ShopifyOrdersInputPort } from '../ports/input/InputPort';
 import { ShopifyOrdersOutputPort } from '../ports/output/OutputPort';
 import { SyncOrdersUseCase } from '../usecases/interfaces/SyncOrdersUseCase';

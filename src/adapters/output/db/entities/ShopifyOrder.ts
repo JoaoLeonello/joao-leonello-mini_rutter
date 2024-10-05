@@ -4,7 +4,7 @@ import { LineItem } from './LineItem';
 
 @Entity('shopify_order')
 export class ShopifyOrder {
-    @PrimaryColumn('uuid') 
+    @PrimaryColumn('uuid')
     id: string;
 
     @Column({ type: 'bigint', unique: true })
@@ -13,149 +13,120 @@ export class ShopifyOrder {
     @Column({ type: 'varchar', length: 255 })
     admin_graphql_api_id!: string;
 
-    @Column({ type: 'bigint', nullable: true })
-    app_id!: number | null;
+    @Column({ type: 'boolean', nullable: true })
+    buyer_accepts_marketing!: boolean | undefined;
 
     @Column({ type: 'varchar', length: 255, nullable: true })
-    browser_ip!: string | null;
+    confirmation_number!: string | undefined;
 
-    @Column({ type: 'boolean' })
-    buyer_accepts_marketing!: boolean;
-
-    @Column({ type: 'varchar', length: 255, nullable: true })
-    cancel_reason!: string | null;
+    @Column({ type: 'boolean', nullable: true })
+    confirmed!: boolean | undefined;
 
     @Column({ type: 'timestamp', nullable: true })
-    cancelled_at!: Date | null;
+    created_at!: Date | undefined;
 
-    @Column({ type: 'varchar', length: 255, nullable: true })
-    cart_token!: string | null;
-
-    @Column({ type: 'bigint' })
-    checkout_id!: number;
-
-    @Column({ type: 'varchar', length: 255, nullable: true })
-    checkout_token!: string | null; 
-
-    @Column({ type: 'varchar', length: 255 })
-    confirmation_number!: string;
-
-    @Column({ type: 'boolean' })
-    confirmed!: boolean;
-
-    @Column({ type: 'timestamp' })
-    created_at!: Date;
-
-    @Column({ type: 'varchar', length: 10 })
-    currency!: string;
-
-    @Column({ type: 'decimal', precision: 10, scale: 2 })
-    current_subtotal_price!: string;
-
-    @Column({ type: 'decimal', precision: 10, scale: 2 })
-    current_total_price!: string;
-
-    @Column({ type: 'decimal', precision: 10, scale: 2 })
-    current_total_tax!: string;
-
-    @Column({ type: 'varchar', length: 10 })
-    customer_locale!: string;
-
-    @Column({ type: 'varchar', length: 255 })
-    financial_status!: string;
-
-    @Column({ type: 'varchar', length: 255, nullable: true })
-    fulfillment_status!: string | null;
-
-    @Column({ type: 'varchar', length: 255, nullable: true })
-    landing_site!: string | null;
-
-    @Column({ type: 'varchar', length: 255 })
-    name!: string;
-
-    @Column({ type: 'int' })
-    order_number!: number;
-
-    @Column({ type: 'varchar', length: 10 })
-    presentment_currency!: string;
-
-    @Column({ type: 'timestamp' })
-    processed_at!: Date;
-
-    @Column({ type: 'varchar', length: 255, nullable: true })
-    reference!: string | null;
-
-    @Column({ type: 'varchar', length: 255, nullable: true })
-    referring_site!: string | null;
-
-    @Column({ type: 'varchar', length: 255 })
-    source_name!: string;
-
-    @Column({ type: 'decimal', precision: 10, scale: 2 })
-    subtotal_price!: string;
-
-    @Column({ type: 'text' })
-    tags!: string;
-
-    @Column({ type: 'boolean' })
-    tax_exempt!: boolean;
-
-    @Column({ type: 'decimal', precision: 10, scale: 2 })
-    total_discounts!: string;
-
-    @Column({ type: 'decimal', precision: 10, scale: 2 })
-    total_line_items_price!: string;
-
-    @Column({ type: 'decimal', precision: 10, scale: 2 })
-    total_price!: string;
-
-    @Column({ type: 'decimal', precision: 10, scale: 2 })
-    total_tax!: string;
+    @Column({ type: 'varchar', length: 10, nullable: true })
+    currency!: string | undefined;
 
     @Column({ type: 'decimal', precision: 10, scale: 2, nullable: true })
-    total_tip_received!: string | null;
+    current_subtotal_price!: string | undefined;
+
+    @Column({ type: 'decimal', precision: 10, scale: 2, nullable: true })
+    current_total_price!: string | undefined;
+
+    @Column({ type: 'decimal', precision: 10, scale: 2, nullable: true })
+    current_total_tax!: string | undefined;
+
+    @Column({ type: 'varchar', length: 10, nullable: true })
+    customer_locale!: string | undefined;
+
+    @Column({ type: 'varchar', length: 255, nullable: true })
+    financial_status!: string | undefined;
+
+    @Column({ type: 'varchar', length: 255, nullable: true })
+    name!: string | undefined;
+
+    @Column({ type: 'int', nullable: true })
+    order_number!: number | undefined;
+
+    @Column({ type: 'varchar', length: 10, nullable: true })
+    presentment_currency!: string | undefined;
 
     @Column({ type: 'timestamp', nullable: true })
-    updated_at!: Date | null;
+    processed_at!: Date | undefined;
+
+    @Column({ type: 'varchar', length: 255, nullable: true })
+    source_name!: string | undefined;
+
+    @Column({ type: 'decimal', precision: 10, scale: 2, nullable: true })
+    subtotal_price!: string | undefined;
+
+    @Column({ type: 'text', nullable: true })
+    tags!: string | undefined;
+
+    @Column({ type: 'boolean', nullable: true })
+    tax_exempt!: boolean | undefined;
+
+    @Column({ type: 'decimal', precision: 10, scale: 2, nullable: true })
+    total_discounts!: string | undefined;
+
+    @Column({ type: 'decimal', precision: 10, scale: 2, nullable: true })
+    total_line_items_price!: string | undefined;
+
+    @Column({ type: 'decimal', precision: 10, scale: 2, nullable: true })
+    total_price!: string | undefined;
+
+    @Column({ type: 'decimal', precision: 10, scale: 2, nullable: true })
+    total_tax!: string | undefined;
+
+    @Column({ type: 'timestamp', nullable: true })
+    updated_at!: Date | null | undefined;
 
     @Column({ type: 'bigint', nullable: true })
-    user_id!: number | null;
+    user_id!: number | null | undefined;
 
-    @OneToMany(() => LineItem, (lineItem) => lineItem.order, { cascade: true })
-    line_items!: LineItem[];
+    @Column({ type: 'bigint', nullable: true })
+    checkout_id!: number | undefined;
+
+    @Column({ type: 'varchar', length: 255, nullable: true })
+    checkout_token!: string | null | undefined;
+
+    @OneToMany(() => LineItem, (lineItem) => lineItem.order, { cascade: false })
+    line_items!: LineItem[] | null | undefined;
 
     constructor(
         id: string = uuidv4(),
         platform_id: number,
         admin_graphql_api_id: string,
-        buyer_accepts_marketing: boolean,
-        confirmation_number: string,
-        confirmed: boolean,
-        created_at: Date,
-        currency: string,
-        current_subtotal_price: string,
-        current_total_price: string,
-        current_total_tax: string,
-        customer_locale: string,
-        financial_status: string,
-        name: string,
-        order_number: number,
-        presentment_currency: string,
-        processed_at: Date,
-        source_name: string,
-        subtotal_price: string,
-        tags: string,
-        tax_exempt: boolean,
-        total_discounts: string,
-        total_line_items_price: string,
-        total_price: string,
-        total_tax: string,
-        user_id: number | null = null,
-        updated_at: Date | null = null,
-        checkout_id: number,
-        checkout_token: string | null = null, 
+        buyer_accepts_marketing?: boolean,
+        confirmation_number?: string,
+        confirmed?: boolean,
+        created_at?: Date,
+        currency?: string,
+        current_subtotal_price?: string,
+        current_total_price?: string,
+        current_total_tax?: string,
+        customer_locale?: string,
+        financial_status?: string,
+        name?: string,
+        order_number?: number,
+        presentment_currency?: string,
+        processed_at?: Date,
+        source_name?: string,
+        subtotal_price?: string,
+        tags?: string,
+        tax_exempt?: boolean,
+        total_discounts?: string,
+        total_line_items_price?: string,
+        total_price?: string,
+        total_tax?: string,
+        user_id?: number | null,
+        updated_at?: Date | null,
+        checkout_id?: number,
+        checkout_token?: string | null,
+        line_items?: LineItem[] | null
     ) {
-        this.id = id,  // Generate new ID if its new;
+        this.id = id;
         this.platform_id = platform_id;
         this.admin_graphql_api_id = admin_graphql_api_id;
         this.buyer_accepts_marketing = buyer_accepts_marketing;
@@ -183,6 +154,7 @@ export class ShopifyOrder {
         this.user_id = user_id;
         this.updated_at = updated_at;
         this.checkout_id = checkout_id;
-        this.checkout_token = checkout_token; 
+        this.checkout_token = checkout_token;
+        this.line_items = line_items;
     }
 }
