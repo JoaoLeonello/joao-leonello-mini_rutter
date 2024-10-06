@@ -1,4 +1,4 @@
-import { BeforeUpdate, Column, Entity, JoinColumn, ManyToOne, PrimaryColumn } from 'typeorm';
+import { Column, Entity, JoinColumn, ManyToOne, PrimaryColumn } from 'typeorm';
 import { v4 as uuidv4 } from 'uuid';
 import { ShopifyOrder } from './ShopifyOrder';
 import { ShopifyProduct } from './ShopifyProduct';
@@ -33,13 +33,6 @@ export class LineItem {
     @ManyToOne(() => ShopifyOrder, (shopifyOrder) => shopifyOrder.line_items, { nullable: true, cascade: false })
     @JoinColumn({ name: 'order_id' })
     order: ShopifyOrder | null;
-
-    @BeforeUpdate()
-    beforeUpdate() {
-        if (this.order === null) {
-            console.error(`************************************Erro: o campo 'order' está nulo antes da atualização do LineItem ${this.id}`);
-        }
-    }
 
     constructor(
         id: string = uuidv4(),

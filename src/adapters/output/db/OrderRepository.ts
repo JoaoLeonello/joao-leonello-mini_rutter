@@ -1,4 +1,5 @@
 import { EntityManager, In } from 'typeorm';
+import logger from '../../../config/logger';
 import { AppDataSource } from '../../../config/typeOrmConfig';
 import { ShopifyOrdersOutputPort } from "../../../ports/output/OutputPort";
 import { Order } from './../../../domain/entities/Order';
@@ -129,6 +130,7 @@ export class OrderRepository implements ShopifyOrdersOutputPort {
             });
         } catch (error) {
             console.error("Error on saving orders:", error);
+            logger.error(`Error on saving orders`, { error });
             throw new Error("Error on saving orders in database.");
         }
     }
@@ -147,8 +149,7 @@ export class OrderRepository implements ShopifyOrdersOutputPort {
                 const productId = String(lineItem.productId || null);
 
                 if (lineItem.productId === null) {
-                    // GERAR LOGS AQUI ******
-                    console.warn(`Skipping line item ${lineItem.id} as it has no linked product.`);
+                    logger.warn(`Skipping line item ${lineItem.id} as it has no linked product.`, { lineItem });
                     continue;
                 }
 

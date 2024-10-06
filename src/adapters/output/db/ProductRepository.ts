@@ -1,4 +1,5 @@
 import { EntityManager, In } from 'typeorm';
+import logger from '../../../config/logger';
 import { AppDataSource } from '../../../config/typeOrmConfig';
 import { ShopifyProductsOutputPort } from "../../../ports/output/OutputPort";
 import { Product } from './../../../domain/entities/Product';
@@ -66,6 +67,7 @@ export class ProductRepository implements ShopifyProductsOutputPort {
             });
         } catch (error) {
             console.error("Error on saving products:", error);
+            logger.error(`Error on saving products`, { error });
             throw new Error("Error on saving products on database.");
         }
     }

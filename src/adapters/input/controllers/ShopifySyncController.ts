@@ -1,5 +1,6 @@
 import { Controller, Get, HttpError } from 'routing-controllers';
 import { inject, injectable } from 'tsyringe';
+import logger from '../../../config/logger';
 import { SyncOrdersUseCase } from '../../../usecases/interfaces/SyncOrdersUseCase';
 import { SyncProductsUseCase } from '../../../usecases/interfaces/SyncProductsUseCase';
 
@@ -30,6 +31,7 @@ export class ShopifySyncController {
             };
         } catch (error) {
             console.error('Error processing products:', error);
+            logger.error(`Error processing products`, { error });
             throw new HttpError(500, 'Internal server error');
         }
     }
@@ -49,6 +51,7 @@ export class ShopifySyncController {
             };
         } catch (error) {
             console.error('Error processing orders:', error);
+            logger.error(`Error processing orders`, { error });
             throw new HttpError(500, 'Internal server error');
         }
     }
