@@ -76,7 +76,7 @@ export class ProductRepository implements ShopifyProductsOutputPort {
         return await AppDataSource.manager
             .getRepository(ShopifyProduct)
             .createQueryBuilder('shopify_product')
-            .select(['shopify_product.id', 'shopify_product.platform_id', 'shopify_product.name'])
+            .select(['shopify_product.id', 'shopify_product.platform_id', 'shopify_product.name', 'shopify_product.title'])
             .getMany();
     }
 }

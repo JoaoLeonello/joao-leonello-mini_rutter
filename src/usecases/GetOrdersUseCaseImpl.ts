@@ -13,29 +13,30 @@ export class GetOrdersUseCaseImpl implements GetOrdersUseCase {
   ) {}
 
   async execute(): Promise<Order[]> {
-    let orders = await this.orderRepository.getOrders()
+    let orders = await this.orderRepository.getOrders();
     let ordersDomain = orders.map((order: ShopifyOrder) => this.toDomain(order));
     
     return ordersDomain.map((order: Order) => {
-      // First, filter fields from order
-      let filteredOrder = this.filterFields(order, ['_id', '_platformId', '_lineItems']);
+      // First filter order fields
+      let filteredOrder = this.filterFields(order, ['_id', '_platform_id', '_line_items']);
   
-      // Second, filter line_items fields
-      if (filteredOrder._lineItems) {
+      // Secons filter line_items fields
+      if (filteredOrder.line_items) {
         let expandedLineItems: any[] = [];
-        filteredOrder._lineItems.forEach((lineItem: any) => {
-          // Define null if there is no value
-          const productId = lineItem._productId ? lineItem._productId : null;
-          const filteredLineItem = { product_id: productId };
-  
-          // Multiply line item by quantity and push to array expandedLineItems
-          for (let i = 0; i < (lineItem._quantity || 1); i++) {
-            expandedLineItems.push(filteredLineItem);
+        filteredOrder.line_items.forEach((lineItem: any) => {
+          // Remove "_" from properties
+          let filteredLineItem = this.filterFields(lineItem, ['_product_id', '_quantity']);
+          const productId = filteredLineItem.product_id ? filteredLineItem.product_id : null;
+
+          // Multiply by quantity property
+          const quantity = filteredLineItem.quantity || 1;
+          for (let i = 0; i < quantity; i++) {
+            expandedLineItems.push({ product_id: productId });
           }
         });
-        filteredOrder._lineItems = expandedLineItems;
+        filteredOrder.line_items = expandedLineItems;
       }
-  
+
       return filteredOrder;
     });
   }
@@ -87,9 +88,10 @@ export class GetOrdersUseCaseImpl implements GetOrdersUseCase {
 
   filterFields(obj: any, fields: string[]): any {
     return Object.keys(obj)
-      .filter(key => fields.includes(key) && obj[key] !== null)
+      .filter(key => fields.includes(key))
       .reduce((result: Record<string, any>, key) => {
-        result[key] = obj[key];
+        const newKey = key.startsWith('_') ? key.substring(1) : key; // Remove o prefixo '_'
+        result[newKey] = obj[key];
         return result;
       }, {});
   }

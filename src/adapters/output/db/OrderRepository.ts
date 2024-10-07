@@ -30,7 +30,37 @@ export class OrderRepository implements ShopifyOrdersOutputPort {
             // Verify if ShopifyOrder exists
             if (this.existingOrdersMap.has(order.platformId ?? '')) {
                 let existingOrder: ShopifyOrder = this.existingOrdersMap.get(order.platformId ?? '')!;
-                this.updateShopifyOrder(existingOrder, order);
+                
+                existingOrder.admin_graphql_api_id = order.adminGraphqlApiId!;
+                existingOrder.buyer_accepts_marketing = order.buyerAcceptsMarketing!;
+                existingOrder.confirmation_number = order.confirmationNumber!;
+                existingOrder.confirmed = order.confirmed!;
+                existingOrder.created_at = order.createdAt!;
+                existingOrder.currency = order.currency!;
+                existingOrder.current_subtotal_price = order.currentSubtotalPrice!;
+                existingOrder.current_total_price = order.currentTotalPrice!;
+                existingOrder.current_total_tax = order.currentTotalTax!;
+                existingOrder.customer_locale = order.customerLocale!;
+                existingOrder.financial_status = order.financialStatus!;
+                existingOrder.name = order.name!;
+                existingOrder.order_number = order.orderNumber!;
+                existingOrder.presentment_currency = order.presentmentCurrency!;
+                existingOrder.processed_at = order.processedAt!;
+                existingOrder.source_name = order.sourceName!;
+                existingOrder.subtotal_price = order.subtotalPrice!;
+                existingOrder.tags = order.tags!;
+                existingOrder.tax_exempt = order.taxExempt!;
+                existingOrder.total_discounts = order.totalDiscounts!;
+                existingOrder.total_line_items_price = order.totalLineItemsPrice!;
+                existingOrder.total_price = order.totalPrice!;
+                existingOrder.total_tax = order.totalTax!;
+                existingOrder.user_id = order.userId!;
+                existingOrder.updated_at = order.updatedAt!;
+                existingOrder.checkout_id = order.checkoutId!;
+                existingOrder.checkout_token = order.checkoutToken!;
+
+                existingOrder.line_items = null;
+
                 ordersToUpdate.push(existingOrder);
             } else {
                 let newShopifyOrder = new ShopifyOrder(
@@ -77,9 +107,7 @@ export class OrderRepository implements ShopifyOrdersOutputPort {
 
                     lineItemsToSave = this.processLineItems(shopifyOrderBatch)
 
-                    // Batch operation
-                    let test = await lineItemsToSave;
-                    await entityManager.save(test);
+                    await entityManager.save((await lineItemsToSave));
                 } 
                 if (ordersToUpdate.length) {
                     await Promise.all(
@@ -123,9 +151,7 @@ export class OrderRepository implements ShopifyOrdersOutputPort {
                     
                     lineItemsToSave = this.processLineItems(shopifyOrderBatch)
 
-                    // Batch operation
-                    let test = await lineItemsToSave;
-                    await entityManager.save(test);
+                    await entityManager.save((await lineItemsToSave));
                 }
             });
         } catch (error) {
@@ -149,7 +175,7 @@ export class OrderRepository implements ShopifyOrdersOutputPort {
                 const productId = String(lineItem.productId || null);
 
                 if (lineItem.productId === null) {
-                    logger.warn(`Skipping line item ${lineItem.id} as it has no linked product.`, { lineItem });
+                    logger.warn(`Skipping line item ${lineItem.platformId} as it has no linked product.`, { lineItem });
                     continue;
                 }
 
@@ -259,41 +285,22 @@ export class OrderRepository implements ShopifyOrdersOutputPort {
         );
     }
 
-    updateShopifyOrder(existingOrder: ShopifyOrder, order: Order): void {
-        existingOrder.admin_graphql_api_id = order.adminGraphqlApiId!;
-        existingOrder.buyer_accepts_marketing = order.buyerAcceptsMarketing!;
-        existingOrder.confirmation_number = order.confirmationNumber!;
-        existingOrder.confirmed = order.confirmed!;
-        existingOrder.created_at = order.createdAt!;
-        existingOrder.currency = order.currency!;
-        existingOrder.current_subtotal_price = order.currentSubtotalPrice!;
-        existingOrder.current_total_price = order.currentTotalPrice!;
-        existingOrder.current_total_tax = order.currentTotalTax!;
-        existingOrder.customer_locale = order.customerLocale!;
-        existingOrder.financial_status = order.financialStatus!;
-        existingOrder.name = order.name!;
-        existingOrder.order_number = order.orderNumber!;
-        existingOrder.presentment_currency = order.presentmentCurrency!;
-        existingOrder.processed_at = order.processedAt!;
-        existingOrder.source_name = order.sourceName!;
-        existingOrder.subtotal_price = order.subtotalPrice!;
-        existingOrder.tags = order.tags!;
-        existingOrder.tax_exempt = order.taxExempt!;
-        existingOrder.total_discounts = order.totalDiscounts!;
-        existingOrder.total_line_items_price = order.totalLineItemsPrice!;
-        existingOrder.total_price = order.totalPrice!;
-        existingOrder.total_tax = order.totalTax!;
-        existingOrder.user_id = order.userId!;
-        existingOrder.updated_at = order.updatedAt!;
-        existingOrder.checkout_id = order.checkoutId!;
-        existingOrder.checkout_token = order.checkoutToken!;
-
-        existingOrder.line_items = null;
-    }
-
     async getOrders(): Promise<ShopifyOrder[]> {
-        return await AppDataSource.manager.find(ShopifyOrder, {
-            relations: ['line_items', 'line_items.product'],
-        });
-    }
+        const test = await AppDataSource
+          .getRepository(ShopifyOrder)
+          .createQueryBuilder('shopify_order')
+          .leftJoinAndSelect('shopify_order.line_items', 'line_item')
+          .leftJoinAndSelect('line_item.product', 'product')
+          .select([
+            'shopify_order.id',
+            'shopify_order.platform_id',
+            'line_item.id',
+            'line_item.platform_id',
+            'line_item.quantity',
+            'product.id',
+          ])
+          .getMany();
+
+          return test;
+      }
 }

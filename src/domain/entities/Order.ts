@@ -3,8 +3,8 @@ import { LineItem } from './LineItem';
 
 export class Order {
   private _id: string;
-  private _platformId: string;
-  private _lineItems!: LineItem[] | null | undefined;
+  private _platform_id: string;
+  private _line_items!: LineItem[] | null | undefined;
   private _adminGraphqlApiId: string | undefined;
   private _buyerAcceptsMarketing: boolean | undefined;
   private _confirmationNumber: string | undefined;
@@ -35,8 +35,8 @@ export class Order {
 
   constructor(
     id: string = uuidv4(),
-    platformId: string,
-    lineItems?: LineItem[] | null | undefined,
+    platform_id: string,
+    line_items?: LineItem[] | null | undefined,
     adminGraphqlApiId?: string | undefined,
     buyerAcceptsMarketing?: boolean | undefined,
     confirmationNumber?: string | undefined,
@@ -66,8 +66,8 @@ export class Order {
     checkoutToken?: string | null
   ) {
     this._id = id;
-    this._platformId = platformId;
-    this._lineItems = lineItems;
+    this._platform_id = platform_id;
+    this._line_items = line_items;
     this._adminGraphqlApiId = adminGraphqlApiId;
     this._buyerAcceptsMarketing = buyerAcceptsMarketing;
     this._confirmationNumber = confirmationNumber;
@@ -103,11 +103,11 @@ export class Order {
   }
 
   get platformId(): string | undefined {
-    return this._platformId;
+    return this._platform_id;
   }
 
   get lineItems(): LineItem[] | undefined {
-    return this._lineItems ?? undefined;
+    return this._line_items ?? undefined;
   }
 
   get adminGraphqlApiId(): string | undefined {

@@ -14,7 +14,7 @@ export class GetProductsUseCaseImpl implements GetProductsUseCase {
   async execute(): Promise<Product[]> {
     let products = await this.productRepository.getProducts()
     let productsDomain = products.map((product: ShopifyProduct) => this.toDomain(product));
-    return productsDomain.map((product: Product) => this.filterFields(product, ['_id', '_platformId', '_name'])); 
+    return productsDomain.map((product: Product) => this.filterFields(product, ['_id', '_platformId', "_title"])); 
   }
 
   toDomain(shopifyProduct: ShopifyProduct): Product {
@@ -39,9 +39,15 @@ export class GetProductsUseCaseImpl implements GetProductsUseCase {
 
   filterFields(obj: any, fields: string[]): any {
     return Object.keys(obj)
-      .filter(key => fields.includes(key) && obj[key] !== null)
+      .filter(key => fields.includes(key))
       .reduce((result: Record<string, any>, key) => {
-        result[key] = obj[key];
+        let newKey = key.startsWith('_') ? key.substring(1) : key; 
+
+        if (newKey === 'title') {
+          newKey = 'name';
+        }
+
+        result[newKey] = obj[key];
         return result;
       }, {});
   }
