@@ -19,6 +19,7 @@
     "mysql2": "^3.11.3",
     "reflect-metadata": "^0.2.2",
     "routing-controllers": "^0.10.4",
+    "supertest": "^7.0.0",
     "tsyringe": "^4.8.0",
     "typeorm": "^0.3.20",
     "uuid": "^10.0.0",

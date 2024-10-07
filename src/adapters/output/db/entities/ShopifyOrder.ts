@@ -11,7 +11,7 @@ export class ShopifyOrder {
     platform_id!: number;
 
     @Column({ type: 'varchar', length: 255 })
-    admin_graphql_api_id!: string;
+    admin_graphql_api_id!: string | undefined;
 
     @Column({ type: 'boolean', nullable: true })
     buyer_accepts_marketing!: boolean | undefined;
@@ -97,7 +97,7 @@ export class ShopifyOrder {
     constructor(
         id: string = uuidv4(),
         platform_id: number,
-        admin_graphql_api_id: string,
+        admin_graphql_api_id?: string,
         buyer_accepts_marketing?: boolean,
         confirmation_number?: string,
         confirmed?: boolean,
