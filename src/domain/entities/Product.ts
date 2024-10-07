@@ -1,4 +1,4 @@
-import { v4 as uuidv4 } from 'uuid';
+import { v4 as uuidv4 } from "uuid";
 
 export class Product {
   private _id: string;
@@ -32,7 +32,7 @@ export class Product {
     templateSuffix: string | null = null,
     publishedScope: string | null = null,
     tags: string | null = null,
-    adminGraphqlApiId: string | null = null
+    adminGraphqlApiId: string | null = null,
   ) {
     this._id = id;
     this._platformId = platformId;

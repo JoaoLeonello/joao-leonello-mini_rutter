@@ -1,15 +1,15 @@
-import { ShopifyProductRepository } from '../ShopifyProductRepository';
-import { ShopifyProductDTO } from '../dto/ShopifyProductDTO';
-import { shopifyApi } from '../requests/ShopifyRequests';
+import { ShopifyProductRepository } from "../ShopifyProductRepository";
+import { ShopifyProductDTO } from "../dto/ShopifyProductDTO";
+import { shopifyApi } from "../requests/ShopifyRequests";
 
 // Mock dependencies
-jest.mock('../requests/ShopifyRequests', () => ({
+jest.mock("../requests/ShopifyRequests", () => ({
   shopifyApi: {
     get: jest.fn(),
   },
 }));
 
-describe('ShopifyProductRepository', () => {
+describe("ShopifyProductRepository", () => {
   let shopifyProductRepository: ShopifyProductRepository;
 
   beforeEach(() => {
@@ -17,20 +17,31 @@ describe('ShopifyProductRepository', () => {
     jest.clearAllMocks();
   });
 
-  describe('fetchProductsInBatches', () => {
-    it('should fetch products in batches until all products are fetched', async () => {
+  describe("fetchProductsInBatches", () => {
+    it("should fetch products in batches until all products are fetched", async () => {
       const mockProductsBatch: Partial<ShopifyProductDTO>[] = [
-        { id: 1, title: 'Product 1', vendor: 'Vendor 1', created_at: '2024-01-01', updated_at: '2024-01-02' },
+        {
+          id: 1,
+          title: "Product 1",
+          vendor: "Vendor 1",
+          created_at: "2024-01-01",
+          updated_at: "2024-01-02",
+        },
       ];
-      (shopifyApi.get as jest.Mock).mockResolvedValueOnce({
-        data: { products: mockProductsBatch },
-        headers: { link: '<https://shopify.com/products?page=2>; rel="next"' },
-      }).mockResolvedValueOnce({
-        data: { products: [] },
-        headers: { link: '' },
-      });
+      (shopifyApi.get as jest.Mock)
+        .mockResolvedValueOnce({
+          data: { products: mockProductsBatch },
+          headers: {
+            link: '<https://shopify.com/products?page=2>; rel="next"',
+          },
+        })
+        .mockResolvedValueOnce({
+          data: { products: [] },
+          headers: { link: "" },
+        });
 
-      const productsGenerator = shopifyProductRepository.fetchProductsInBatches();
+      const productsGenerator =
+        shopifyProductRepository.fetchProductsInBatches();
       const products: ShopifyProductDTO[] = [];
       for await (const batch of productsGenerator) {
         products.push(...batch);
@@ -41,16 +52,23 @@ describe('ShopifyProductRepository', () => {
       expect(products[0].id).toBe(1);
     });
 
-    it('should stop fetching if there is no next page', async () => {
+    it("should stop fetching if there is no next page", async () => {
       const mockProductsBatch: Partial<ShopifyProductDTO>[] = [
-        { id: 1, title: 'Product 1', vendor: 'Vendor 1', created_at: '2024-01-01', updated_at: '2024-01-02' },
+        {
+          id: 1,
+          title: "Product 1",
+          vendor: "Vendor 1",
+          created_at: "2024-01-01",
+          updated_at: "2024-01-02",
+        },
       ];
       (shopifyApi.get as jest.Mock).mockResolvedValueOnce({
         data: { products: mockProductsBatch },
-        headers: { link: '' },
+        headers: { link: "" },
       });
 
-      const productsGenerator = shopifyProductRepository.fetchProductsInBatches();
+      const productsGenerator =
+        shopifyProductRepository.fetchProductsInBatches();
       const products: ShopifyProductDTO[] = [];
       for await (const batch of productsGenerator) {
         products.push(...batch);
@@ -61,13 +79,14 @@ describe('ShopifyProductRepository', () => {
       expect(products[0].id).toBe(1);
     });
 
-    it('should handle cases where there are no products', async () => {
+    it("should handle cases where there are no products", async () => {
       (shopifyApi.get as jest.Mock).mockResolvedValueOnce({
         data: { products: [] },
-        headers: { link: '' },
+        headers: { link: "" },
       });
 
-      const productsGenerator = shopifyProductRepository.fetchProductsInBatches();
+      const productsGenerator =
+        shopifyProductRepository.fetchProductsInBatches();
       const products: ShopifyProductDTO[] = [];
       for await (const batch of productsGenerator) {
         products.push(...batch);
@@ -77,30 +96,41 @@ describe('ShopifyProductRepository', () => {
       expect(products).toHaveLength(0);
     });
 
-    it('should handle multiple pages of products', async () => {
-      const mockProductsBatch1: Partial<ShopifyProductDTO>[] = Array.from({ length: 50 }, (_, i) => ({
-        id: i + 1,
-        title: `Product ${i + 1}`,
-        vendor: 'Vendor 1',
-        created_at: '2024-01-01',
-        updated_at: '2024-01-02',
-      }));
-      const mockProductsBatch2: Partial<ShopifyProductDTO>[] = Array.from({ length: 20 }, (_, i) => ({
-        id: i + 51,
-        title: `Product ${i + 51}`,
-        vendor: 'Vendor 1',
-        created_at: '2024-01-01',
-        updated_at: '2024-01-02',
-      }));
-      (shopifyApi.get as jest.Mock).mockResolvedValueOnce({
-        data: { products: mockProductsBatch1 },
-        headers: { link: '<https://shopify.com/products?page=2>; rel="next"' },
-      }).mockResolvedValueOnce({
-        data: { products: mockProductsBatch2 },
-        headers: { link: '' },
-      });
+    it("should handle multiple pages of products", async () => {
+      const mockProductsBatch1: Partial<ShopifyProductDTO>[] = Array.from(
+        { length: 50 },
+        (_, i) => ({
+          id: i + 1,
+          title: `Product ${i + 1}`,
+          vendor: "Vendor 1",
+          created_at: "2024-01-01",
+          updated_at: "2024-01-02",
+        }),
+      );
+      const mockProductsBatch2: Partial<ShopifyProductDTO>[] = Array.from(
+        { length: 20 },
+        (_, i) => ({
+          id: i + 51,
+          title: `Product ${i + 51}`,
+          vendor: "Vendor 1",
+          created_at: "2024-01-01",
+          updated_at: "2024-01-02",
+        }),
+      );
+      (shopifyApi.get as jest.Mock)
+        .mockResolvedValueOnce({
+          data: { products: mockProductsBatch1 },
+          headers: {
+            link: '<https://shopify.com/products?page=2>; rel="next"',
+          },
+        })
+        .mockResolvedValueOnce({
+          data: { products: mockProductsBatch2 },
+          headers: { link: "" },
+        });
 
-      const productsGenerator = shopifyProductRepository.fetchProductsInBatches();
+      const productsGenerator =
+        shopifyProductRepository.fetchProductsInBatches();
       const products: ShopifyProductDTO[] = [];
       for await (const batch of productsGenerator) {
         products.push(...batch);

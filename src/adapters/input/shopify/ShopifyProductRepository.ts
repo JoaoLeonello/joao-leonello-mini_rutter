@@ -1,4 +1,3 @@
-
 import { ShopifyProductsInputPort } from "../../../ports/input/InputPort";
 import { ShopifyProductDTO } from "./dto/ShopifyProductDTO";
 import { shopifyApi } from "./requests/ShopifyRequests";
@@ -13,18 +12,20 @@ export class ShopifyProductRepository implements ShopifyProductsInputPort {
       let productsBatch: ShopifyProductDTO[] = [];
       const response: any = await shopifyApi.get(nextPageUrl, {
         params: {
-          limit: 50
-        }
+          limit: 50,
+        },
       });
 
       // Populate with data from Shopify API
       productsBatch = response.data.products as ShopifyProductDTO[];
 
       // Verify header link
-      const linkHeader = response.headers['link'];
+      const linkHeader = response.headers["link"];
       if (linkHeader && linkHeader.includes('rel="next"')) {
         // Extract url for next page
-        const nextLink = linkHeader.split(',').find((s: string) => s.includes('rel="next"'));
+        const nextLink = linkHeader
+          .split(",")
+          .find((s: string) => s.includes('rel="next"'));
         if (nextLink) {
           nextPageUrl = nextLink.match(/<(.*?)>/)?.[1] || null;
         }

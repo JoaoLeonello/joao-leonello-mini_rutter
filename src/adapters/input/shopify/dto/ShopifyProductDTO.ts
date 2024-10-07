@@ -17,7 +17,7 @@ export class ShopifyProductDTO {
     public variants: VariantDTO[],
     public options: OptionDTO[],
     public images: ImageDTO[],
-    public image: ImageDTO | null
+    public image: ImageDTO | null,
   ) {}
 }
 
@@ -47,7 +47,7 @@ export class VariantDTO {
     public inventory_quantity: number,
     public old_inventory_quantity: number,
     public admin_graphql_api_id: string,
-    public image_id: number | null
+    public image_id: number | null,
   ) {}
 }
 
@@ -57,7 +57,7 @@ export class OptionDTO {
     public product_id: number,
     public name: string,
     public position: number,
-    public values: string[]
+    public values: string[],
   ) {}
 }
 
@@ -72,6 +72,6 @@ export class ImageDTO {
     public variant_ids: number[],
     public created_at: string,
     public updated_at: string,
-    public admin_graphql_api_id: string
+    public admin_graphql_api_id: string,
   ) {}
 }

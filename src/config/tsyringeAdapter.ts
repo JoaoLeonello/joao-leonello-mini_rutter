@@ -1,5 +1,5 @@
-import { IocAdapter } from 'routing-controllers';
-import { DependencyContainer } from 'tsyringe';
+import { IocAdapter } from "routing-controllers";
+import { DependencyContainer } from "tsyringe";
 
 export class TsyringeAdapter implements IocAdapter {
   constructor(private container: DependencyContainer) {}

@@ -1,17 +1,17 @@
-import { v4 as uuidv4 } from 'uuid';
-import { LineItem } from '../LineItem';
+import { v4 as uuidv4 } from "uuid";
+import { LineItem } from "../LineItem";
 
-describe('LineItem', () => {
-  it('should create a line item with provided values', () => {
+describe("LineItem", () => {
+  it("should create a line item with provided values", () => {
     const id = uuidv4();
     const platformId = 1001;
-    const name = 'Item 1';
-    const title = 'Title 1';
-    const price = '10.00';
-    const vendor = 'Vendor 1';
+    const name = "Item 1";
+    const title = "Title 1";
+    const price = "10.00";
+    const vendor = "Vendor 1";
     const quantity = 2;
-    const productId = 'product123';
-    const orderId = 'order123';
+    const productId = "product123";
+    const orderId = "order123";
 
     const lineItem = new LineItem(
       id,
@@ -22,7 +22,7 @@ describe('LineItem', () => {
       vendor,
       quantity,
       productId,
-      orderId
+      orderId,
     );
 
     expect(lineItem.id).toBe(id);
@@ -36,12 +36,12 @@ describe('LineItem', () => {
     expect(lineItem.orderId).toBe(orderId);
   });
 
-  it('should create a line item with default values', () => {
+  it("should create a line item with default values", () => {
     const platformId = 1001;
-    const name = 'Item 1';
-    const title = 'Title 1';
-    const price = '10.00';
-    const vendor = 'Vendor 1';
+    const name = "Item 1";
+    const title = "Title 1";
+    const price = "10.00";
+    const vendor = "Vendor 1";
 
     const lineItem = new LineItem(
       undefined,
@@ -49,7 +49,7 @@ describe('LineItem', () => {
       name,
       title,
       price,
-      vendor
+      vendor,
     );
 
     expect(lineItem.id).toBeDefined();

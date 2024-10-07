@@ -79,11 +79,11 @@ export class ShopifyOrderDTO {
     public customer: string | null,
     public discount_applications: any[],
     public fulfillments: any[],
-    public line_items: LineItemDTO[] ,
+    public line_items: LineItemDTO[],
     public payment_terms: PaymentTermsDTO | null,
     public refunds: any[],
     public shipping_address: string | null,
-    public shipping_lines: any[]
+    public shipping_lines: any[],
   ) {}
 }
 
@@ -115,21 +115,21 @@ export class LineItemDTO {
     public vendor: string,
     public tax_lines: TaxLineDTO[],
     public duties: any[],
-    public discount_allocations: any[]
+    public discount_allocations: any[],
   ) {}
 }
 
 export class MoneySetDTO {
   constructor(
     public shop_money: MoneyDTO,
-    public presentment_money: MoneyDTO
+    public presentment_money: MoneyDTO,
   ) {}
 }
 
 export class MoneyDTO {
   constructor(
     public amount: string,
-    public currency_code: string
+    public currency_code: string,
   ) {}
 }
 
@@ -139,7 +139,7 @@ export class TaxLineDTO {
     public rate: number,
     public title: string,
     public price_set: MoneySetDTO,
-    public channel_liable: boolean
+    public channel_liable: boolean,
   ) {}
 }
 
@@ -150,7 +150,7 @@ export class ClientDetailsDTO {
     public browser_ip: string | null,
     public browser_width: number | null,
     public session_hash: string | null,
-    public user_agent: string | null
+    public user_agent: string | null,
   ) {}
 }
 
@@ -162,7 +162,7 @@ export class PaymentTermsDTO {
     public payment_schedules: PaymentScheduleDTO[],
     public payment_terms_name: string,
     public payment_terms_type: string,
-    public updated_at: string
+    public updated_at: string,
   ) {}
 }
 
@@ -175,6 +175,6 @@ export class PaymentScheduleDTO {
     public due_at: string | null,
     public completed_at: string | null,
     public created_at: string,
-    public updated_at: string
+    public updated_at: string,
   ) {}
 }

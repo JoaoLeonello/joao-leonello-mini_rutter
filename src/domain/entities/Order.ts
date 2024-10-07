@@ -1,5 +1,5 @@
-import { v4 as uuidv4 } from 'uuid';
-import { LineItem } from './LineItem';
+import { v4 as uuidv4 } from "uuid";
+import { LineItem } from "./LineItem";
 
 export class Order {
   private _id: string;
@@ -63,7 +63,7 @@ export class Order {
     userId?: number | null,
     updatedAt?: Date | null,
     checkoutId?: number,
-    checkoutToken?: string | null
+    checkoutToken?: string | null,
   ) {
     this._id = id;
     this._platform_id = platform_id;
