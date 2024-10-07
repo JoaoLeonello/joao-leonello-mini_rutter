@@ -2,12 +2,12 @@ import { EntityManager } from "typeorm";
 import { AppDataSource } from "../../../../config/typeOrmConfig";
 import { Order } from "../../../../domain/entities/Order";
 import { LineItem as EntityLineItem } from "../entities/LineItem";
+import { ShopifyOrder } from "../entities/ShopifyOrder";
 import { ShopifyProduct } from "../entities/ShopifyProduct";
 import { OrderRepository } from "../OrderRepository";
-import { ShopifyOrder } from "./../entities/ShopifyOrder";
 
 // Mock dependencies
-jest.mock("../../config/typeOrmConfig", () => ({
+jest.mock("../../../../config/typeOrmConfig", () => ({
   AppDataSource: {
     getRepository: jest.fn(() => ({
       find: jest.fn(),

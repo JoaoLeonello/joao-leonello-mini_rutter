@@ -5,7 +5,7 @@ import { ShopifyProduct } from "../entities/ShopifyProduct";
 import { ProductRepository } from "../ProductRepository";
 
 // Mock dependencies
-jest.mock("../../config/typeOrmConfig", () => ({
+jest.mock("../../../../config/typeOrmConfig", () => ({
   AppDataSource: {
     getRepository: jest.fn(() => ({
       find: jest.fn(),

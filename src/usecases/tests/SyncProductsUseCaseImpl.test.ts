@@ -1,5 +1,5 @@
 import { container } from "tsyringe";
-import { ShopifyProductDTO } from "../../adapters/input/shopify/dto/ShopifyProductDTO";
+import { ImageDTO, OptionDTO, ShopifyProductDTO, VariantDTO } from "../../adapters/input/shopify/dto/ShopifyProductDTO";
 import { Product } from "../../domain/entities/Product";
 import { ShopifyProductsInputPort } from "../../ports/input/InputPort";
 import { ShopifyProductsOutputPort } from "../../ports/output/OutputPort";
@@ -9,8 +9,13 @@ import { SyncProductsUseCaseImpl } from "../SyncProductsUseCaseImpl";
 jest.mock("../../ports/input/InputPort");
 jest.mock("../../ports/output/OutputPort");
 
-const mockInputPort: ShopifyProductsInputPort = {
-  fetchProductsInBatches: jest.fn(),
+
+const mockInputPort: jest.Mocked<ShopifyProductsInputPort> = {
+  fetchProductsInBatches: jest.fn().mockReturnValue({
+    [Symbol.asyncIterator]: jest.fn().mockReturnValue({
+      next: jest.fn().mockResolvedValue({ done: true, value: [] })
+    })
+  }),
 };
 
 const mockOutputPort: ShopifyProductsOutputPort = {
@@ -34,22 +39,75 @@ describe("SyncProductsUseCaseImpl", () => {
 
   it("should process and store products in batches", async () => {
     const mockProductsBatch: ShopifyProductDTO[] = [
-      {
-        id: 1,
-        handle: "product-handle",
-        title: "Product Title",
-        body_html: "<p>Product description</p>",
-        vendor: "Vendor Name",
-        product_type: "Product Type",
-        created_at: "2024-01-01",
-        updated_at: "2024-01-02",
-        status: "active",
-        published_at: "2024-01-03",
-        template_suffix: "template_suffix",
-        published_scope: "web",
-        tags: "tag1, tag2",
-        admin_graphql_api_id: "graphqlApiId",
-      },
+      new ShopifyProductDTO(
+        1, // id
+        "Mock Product", // title
+        "<p>Product description</p>", // body_html
+        "Mock Vendor", // vendor
+        "Mock Product Type", // product_type
+        "2024-10-01T10:00:00Z", // created_at
+        "mock-product", // handle
+        "2024-10-01T10:10:00Z", // updated_at
+        "2024-10-01T12:00:00Z", // published_at
+        null, // template_suffix
+        "global", // published_scope
+        "example tag", // tags
+        "active", // status
+        "admin_graphql_api_id_mock", // admin_graphql_api_id
+        [
+          new VariantDTO(
+            1, // id
+            1, // product_id
+            "Default Title", // title
+            "10.00", // price
+            1, // position
+            "deny", // inventory_policy
+            null, // compare_at_price
+            "Option 1", // option1
+            null, // option2
+            null, // option3
+            "2024-10-01T10:00:00Z", // created_at
+            "2024-10-01T10:10:00Z", // updated_at
+            true, // taxable
+            "manual", // fulfillment_service
+            500, // grams
+            null, // inventory_management
+            true, // requires_shipping
+            "SKU-001", // sku
+            1.5, // weight
+            "kg", // weight_unit
+            1001, // inventory_item_id
+            100, // inventory_quantity
+            100, // old_inventory_quantity
+            "admin_graphql_api_id_variant_mock", // admin_graphql_api_id
+            null, // image_id
+          ),
+        ], // variants
+        [
+          new OptionDTO(
+            1, // id
+            1, // product_id
+            "Size", // name
+            1, // position
+            ["Small", "Medium", "Large"], // values
+          ),
+        ], // options
+        [
+          new ImageDTO(
+            1, // id
+            1, // product_id
+            1, // position
+            "https://example.com/image1.png", // src
+            800, // width
+            600, // height
+            [], // variant_ids
+            "2024-10-01T10:00:00Z", // created_at
+            "2024-10-01T10:10:00Z", // updated_at
+            "admin_graphql_api_id_image_mock", // admin_graphql_api_id
+          ),
+        ], // images
+        null, // image
+      ),
     ];
 
     (mockInputPort.fetchProductsInBatches as jest.Mock).mockResolvedValueOnce([

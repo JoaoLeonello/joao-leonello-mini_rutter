@@ -45,7 +45,7 @@ describe("ShopifyOrdersRepository", () => {
 
       expect(shopifyApi.get).toHaveBeenCalledTimes(2);
       expect(orders).toHaveLength(1);
-      expect(orders[0].id).toBe("1");
+      expect(orders[0].id).toBe(1);
     });
 
     it("should stop fetching if there is no next page", async () => {
@@ -70,7 +70,7 @@ describe("ShopifyOrdersRepository", () => {
 
       expect(shopifyApi.get).toHaveBeenCalledTimes(1);
       expect(orders).toHaveLength(1);
-      expect(orders[0].id).toBe("1");
+      expect(orders[0].id).toBe(1);
     });
 
     it("should limit the number of orders fetched to maxOrders", async () => {

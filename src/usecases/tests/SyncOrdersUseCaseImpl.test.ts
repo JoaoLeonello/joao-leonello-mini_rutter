@@ -1,20 +1,26 @@
-import { SyncOrdersUseCaseImpl } from "../SyncOrdersUseCaseImpl";
+import { container } from "tsyringe";
+import {
+  LineItemDTO,
+  MoneyDTO,
+  MoneySetDTO,
+  ShopifyOrderDTO,
+} from "../../adapters/input/shopify/dto/ShopifyOrderDTO";
+import { LineItem } from "../../domain/entities/LineItem";
+import { Order } from "../../domain/entities/Order";
 import { ShopifyOrdersInputPort } from "../../ports/input/InputPort";
 import { ShopifyOrdersOutputPort } from "../../ports/output/OutputPort";
-import {
-  ShopifyOrderDTO,
-  LineItemDTO,
-} from "../../adapters/input/shopify/dto/ShopifyOrderDTO";
-import { Order } from "../../domain/entities/Order";
-import { LineItem } from "../../domain/entities/LineItem";
-import { container } from "tsyringe";
+import { SyncOrdersUseCaseImpl } from "../SyncOrdersUseCaseImpl";
 
 // Mock dependencies
 jest.mock("../../ports/input/InputPort");
 jest.mock("../../ports/output/OutputPort");
 
-const mockInputPort: ShopifyOrdersInputPort = {
-  fetchOrdersInBatches: jest.fn(),
+const mockInputPort: jest.Mocked<ShopifyOrdersInputPort> = {
+  fetchOrdersInBatches: jest.fn().mockReturnValue({
+    [Symbol.asyncIterator]: jest.fn().mockReturnValue({
+      next: jest.fn().mockResolvedValue({ done: true, value: [] })
+    })
+  }),
 };
 
 const mockOutputPort: ShopifyOrdersOutputPort = {
@@ -38,83 +44,138 @@ describe("SyncOrdersUseCaseImpl", () => {
 
   it("should process and store orders in batches", async () => {
     const mockOrdersBatch: ShopifyOrderDTO[] = [
-      {
-        id: 1,
-        line_items: [
-          {
-            id: 1001,
-            name: "Item 1",
-            title: "Title 1",
-            price: "10.00",
-            vendor: "Vendor 1",
-            quantity: 2,
-            product_id: 1001,
-            admin_graphql_api_id: "graphqlApiId",
-            fulfillable_quantity: 2,
-            fulfillment_service: "manual",
-            fulfillment_status: null,
-            gift_card: false,
-            grams: 200,
-            price_set: {
-              shop_money: { amount: "10.00", currency_code: "USD" },
-              presentment_money: { amount: "10.00", currency_code: "USD" },
-            },
-            product_exists: true,
-            properties: [],
-            requires_shipping: true,
-            sku: "SKU123",
-            taxable: true,
-            total_discount: "0.00",
-            total_discount_set: {
-              shop_money: { amount: "0.00", currency_code: "USD" },
-              presentment_money: { amount: "0.00", currency_code: "USD" },
-            },
-            variant_id: null,
-            variant_inventory_management: null,
-            variant_title: null,
-            tax_lines: [],
-            duties: [],
-            discount_allocations: [],
-          },
-        ],
-        admin_graphql_api_id: "graphqlApiId",
-        buyer_accepts_marketing: true,
-        confirmation_number: "confirmationNumber",
-        confirmed: true,
-        created_at: "2024-01-01",
-        currency: "USD",
-        current_subtotal_price: "100.00",
-        current_total_price: "120.00",
-        current_total_tax: "20.00",
-        customer_locale: "en",
-        financial_status: "paid",
-        name: "Order1",
-        order_number: 1,
-        presentment_currency: "USD",
-        processed_at: "2024-01-02",
-        source_name: "shopify",
-        subtotal_price: "100.00",
-        tags: "tag1",
-        tax_exempt: false,
-        total_discounts: "10.00",
-        total_line_items_price: "110.00",
-        total_price: "120.00",
-        total_tax: "20.00",
-        user_id: 12345,
-        updated_at: "2024-01-03",
-        checkout_id: 123,
-        checkout_token: "token",
-      },
+      new ShopifyOrderDTO(
+        1, // id
+        "admin_graphql_api_id_mock",
+        null, // app_id
+        "192.168.0.1", // browser_ip
+        true, // buyer_accepts_marketing
+        null, // cancel_reason
+        null, // cancelled_at
+        "cart_token_mock",
+        12345, // checkout_id
+        "checkout_token_mock",
+        null, // client_details
+        null, // closed_at
+        null, // company
+        "confirmation_number_mock",
+        true, // confirmed
+        "2024-10-01T10:00:00Z", // created_at
+        "USD", // currency
+        "100.00", // current_subtotal_price
+        null, // current_subtotal_price_set
+        null, // current_total_additional_fees_set
+        "10.00", // current_total_discounts
+        null, // current_total_discounts_set
+        null, // current_total_duties_set
+        "90.00", // current_total_price
+        null, // current_total_price_set
+        "8.00", // current_total_tax
+        null, // current_total_tax_set
+        "en-US", // customer_locale
+        null, // device_id
+        [], // discount_codes
+        false, // estimated_taxes
+        "paid", // financial_status
+        null, // fulfillment_status
+        null, // landing_site
+        null, // landing_site_ref
+        null, // location_id
+        null, // merchant_of_record_app_id
+        "Order #1001", // name
+        null, // note
+        [], // note_attributes
+        1, // number
+        1001, // order_number
+        null, // original_total_additional_fees_set
+        null, // original_total_duties_set
+        ["credit_card"], // payment_gateway_names
+        null, // po_number
+        "USD", // presentment_currency
+        "2024-10-01T10:10:00Z", // processed_at
+        null, // reference
+        null, // referring_site
+        null, // source_identifier
+        "web", // source_name
+        null, // source_url
+        "90.00", // subtotal_price
+        null, // subtotal_price_set
+        "example tag", // tags
+        false, // tax_exempt
+        [], // tax_lines
+        true, // taxes_included
+        false, // test
+        "token_mock", // token
+        "10.00", // total_discounts
+        null, // total_discounts_set
+        "90.00", // total_line_items_price
+        null, // total_line_items_price_set
+        "90.00", // total_outstanding
+        "90.00", // total_price
+        null, // total_price_set
+        null, // total_shipping_price_set
+        "8.00", // total_tax
+        null, // total_tax_set
+        "0.00", // total_tip_received
+        0, // total_weight
+        null, // updated_at
+        null, // user_id
+        null, // billing_address
+        null, // customer
+        [], // discount_applications
+        [], // fulfillments
+        [
+          new LineItemDTO(
+            1, // id
+            "admin_graphql_api_id_mock",
+            1, // fulfillable_quantity
+            "manual", // fulfillment_service
+            null, // fulfillment_status
+            false, // gift_card
+            500, // grams
+            "Test Product", // name
+            "45.00", // price
+            new MoneySetDTO(
+              new MoneyDTO("45.00", "USD"),
+              new MoneyDTO("45.00", "USD")
+            ), // price_set
+            true, // product_exists
+            10001, // product_id
+            [], // properties
+            2, // quantity
+            true, // requires_shipping
+            "SKU-001", // sku
+            true, // taxable
+            "Test Variant", // title
+            "5.00", // total_discount
+            new MoneySetDTO(
+              new MoneyDTO("5.00", "USD"),
+              new MoneyDTO("5.00", "USD")
+            ), // total_discount_set
+            null, // variant_id
+            null, // variant_inventory_management
+            null, // variant_title
+            "Test Vendor", // vendor
+            [], // tax_lines
+            [], // duties
+            [] // discount_allocations
+          ),
+        ], // line_items
+        null, // payment_terms
+        [], // refunds
+        null, // shipping_address
+        [] // shipping_lines
+      ),
     ];
-
+  
     (mockInputPort.fetchOrdersInBatches as jest.Mock).mockResolvedValueOnce([
       mockOrdersBatch,
     ]);
     (mockOutputPort.storeOrders as jest.Mock).mockResolvedValueOnce(undefined);
-
+  
     const generator = syncOrdersUseCase.execute();
     const result = await generator.next();
-
+  
     expect(result.done).toBe(false);
     expect(mockInputPort.fetchOrdersInBatches).toHaveBeenCalledTimes(1);
     expect(mockOutputPort.storeOrders).toHaveBeenCalledWith(
@@ -136,8 +197,8 @@ describe("SyncOrdersUseCaseImpl", () => {
                   lineItemDTO.product_id
                     ? lineItemDTO.product_id.toString()
                     : null,
-                  orderDTO.id.toString(),
-                ),
+                  orderDTO.id.toString()
+                )
             ),
             orderDTO.admin_graphql_api_id,
             orderDTO.buyer_accepts_marketing,
@@ -165,11 +226,12 @@ describe("SyncOrdersUseCaseImpl", () => {
             orderDTO.user_id,
             orderDTO.updated_at ? new Date(orderDTO.updated_at) : null,
             orderDTO.checkout_id,
-            orderDTO.checkout_token,
-          ),
-      ),
+            orderDTO.checkout_token
+          )
+      )
     );
   });
+  
 
   it("should handle empty batches gracefully", async () => {
     (mockInputPort.fetchOrdersInBatches as jest.Mock).mockResolvedValueOnce([]);

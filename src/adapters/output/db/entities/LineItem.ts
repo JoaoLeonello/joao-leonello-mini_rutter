@@ -12,7 +12,7 @@ export class LineItem {
   platform_id: number;
 
   @Column({ type: "varchar", length: 255 })
-  name: string;
+  name!: string;
 
   @Column({ type: "varchar", length: 255 })
   title!: string;
