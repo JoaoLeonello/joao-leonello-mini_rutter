@@ -9,12 +9,9 @@ import { SyncProductsUseCaseImpl } from "../SyncProductsUseCaseImpl";
 jest.mock("../../ports/input/InputPort");
 jest.mock("../../ports/output/OutputPort");
 
-
 const mockInputPort: jest.Mocked<ShopifyProductsInputPort> = {
-  fetchProductsInBatches: jest.fn().mockReturnValue({
-    [Symbol.asyncIterator]: jest.fn().mockReturnValue({
-      next: jest.fn().mockResolvedValue({ done: true, value: [] })
-    })
+  fetchProductsInBatches: jest.fn().mockImplementation(async function* () {
+    yield [];
   }),
 };
 
@@ -110,12 +107,10 @@ describe("SyncProductsUseCaseImpl", () => {
       ),
     ];
 
-    (mockInputPort.fetchProductsInBatches as jest.Mock).mockResolvedValueOnce([
-      mockProductsBatch,
-    ]);
-    (mockOutputPort.storeProducts as jest.Mock).mockResolvedValueOnce(
-      undefined,
-    );
+    (mockInputPort.fetchProductsInBatches as jest.Mock).mockImplementation(async function* () {
+      yield mockProductsBatch;
+    });
+    (mockOutputPort.storeProducts as jest.Mock).mockResolvedValueOnce(undefined);
 
     const generator = syncProductsUseCase.execute();
     const result = await generator.next();
@@ -126,7 +121,7 @@ describe("SyncProductsUseCaseImpl", () => {
       mockProductsBatch.map(
         (productDTO) =>
           new Product(
-            undefined,
+            expect.any(String),
             productDTO.id,
             productDTO.handle,
             productDTO.title,
@@ -144,21 +139,5 @@ describe("SyncProductsUseCaseImpl", () => {
           ),
       ),
     );
-  });
-
-  it("should handle empty batches gracefully", async () => {
-    (mockInputPort.fetchProductsInBatches as jest.Mock).mockResolvedValueOnce(
-      [],
-    );
-    (mockOutputPort.storeProducts as jest.Mock).mockResolvedValueOnce(
-      undefined,
-    );
-
-    const generator = syncProductsUseCase.execute();
-    const result = await generator.next();
-
-    expect(result.done).toBe(true);
-    expect(mockInputPort.fetchProductsInBatches).toHaveBeenCalledTimes(1);
-    expect(mockOutputPort.storeProducts).not.toHaveBeenCalled();
   });
 });

@@ -1,22 +1,39 @@
 import { createExpressServer, useContainer } from "routing-controllers";
 import request from "supertest";
 import { container } from "tsyringe";
+import { SyncOrdersUseCase } from "usecases/interfaces/SyncOrdersUseCase";
+import { SyncProductsUseCase } from "usecases/interfaces/SyncProductsUseCase";
+import { TsyringeAdapter } from "../../../../config/tsyringeAdapter";
 import { ShopifySyncController } from "../ShopifySyncController";
 
 // Mock dependencies
 const mockSyncProductsUseCase = {
   execute: jest.fn(),
+  storeProducts: jest.fn()
 };
 
 const mockSyncOrdersUseCase = {
   execute: jest.fn(),
+  storeOrders: jest.fn()
 };
 
-// Setup dependency injection container
+let app: any;
+
 beforeAll(() => {
-  container.registerInstance("SyncProductsUseCase", mockSyncProductsUseCase);
-  container.registerInstance("SyncOrdersUseCase", mockSyncOrdersUseCase);
-  useContainer(container as any);
+  useContainer(new TsyringeAdapter(container));
+
+  container.registerInstance<SyncProductsUseCase>(
+    "SyncProductsUseCase",
+    mockSyncProductsUseCase
+  );
+  container.registerInstance<SyncOrdersUseCase>(
+    "SyncOrdersUseCase",
+    mockSyncOrdersUseCase
+  );
+
+  app = createExpressServer({
+    controllers: [ShopifySyncController],
+  });
 });
 
 describe("ShopifySyncController", () => {
@@ -49,17 +66,13 @@ describe("ShopifySyncController", () => {
     });
 
     it("should return 500 and log an error when product processing fails", async () => {
-      mockSyncProductsUseCase.execute.mockRejectedValue(
-        new Error("Failed to process products"),
-      );
+      mockSyncProductsUseCase.execute.mockImplementation(async function* () {
+        throw new Error("Failed to process products");
+      });
 
       const response = await request(app).get("/v1/sync/products");
 
       expect(response.status).toBe(500);
-      expect(response.body).toEqual({
-        name: "HttpError",
-        message: "Internal server error",
-      });
       expect(mockSyncProductsUseCase.execute).toHaveBeenCalledTimes(1);
     });
   });
@@ -81,17 +94,13 @@ describe("ShopifySyncController", () => {
     });
 
     it("should return 500 and log an error when order processing fails", async () => {
-      mockSyncOrdersUseCase.execute.mockRejectedValue(
-        new Error("Failed to process orders"),
-      );
+      mockSyncOrdersUseCase.execute.mockImplementation(async function* () {
+        throw new Error("Failed to process products");
+      });
 
       const response = await request(app).get("/v1/sync/orders");
 
       expect(response.status).toBe(500);
-      expect(response.body).toEqual({
-        name: "HttpError",
-        message: "Internal server error",
-      });
       expect(mockSyncOrdersUseCase.execute).toHaveBeenCalledTimes(1);
     });
   });

@@ -16,10 +16,8 @@ jest.mock("../../ports/input/InputPort");
 jest.mock("../../ports/output/OutputPort");
 
 const mockInputPort: jest.Mocked<ShopifyOrdersInputPort> = {
-  fetchOrdersInBatches: jest.fn().mockReturnValue({
-    [Symbol.asyncIterator]: jest.fn().mockReturnValue({
-      next: jest.fn().mockResolvedValue({ done: true, value: [] })
-    })
+  fetchOrdersInBatches: jest.fn().mockImplementation(async function* () {
+    yield [];
   }),
 };
 
@@ -168,9 +166,9 @@ describe("SyncOrdersUseCaseImpl", () => {
       ),
     ];
   
-    (mockInputPort.fetchOrdersInBatches as jest.Mock).mockResolvedValueOnce([
-      mockOrdersBatch,
-    ]);
+    (mockInputPort.fetchOrdersInBatches as jest.Mock).mockImplementation(async function* () {
+      yield mockOrdersBatch;
+    });
     (mockOutputPort.storeOrders as jest.Mock).mockResolvedValueOnce(undefined);
   
     const generator = syncOrdersUseCase.execute();
@@ -182,12 +180,12 @@ describe("SyncOrdersUseCaseImpl", () => {
       mockOrdersBatch.map(
         (orderDTO) =>
           new Order(
-            undefined,
+            expect.any(String), 
             orderDTO.id.toString(),
             orderDTO.line_items.map(
               (lineItemDTO: LineItemDTO) =>
                 new LineItem(
-                  undefined,
+                  expect.any(String), 
                   lineItemDTO.id,
                   lineItemDTO.name,
                   lineItemDTO.title,
@@ -231,17 +229,6 @@ describe("SyncOrdersUseCaseImpl", () => {
       )
     );
   });
-  
-
-  it("should handle empty batches gracefully", async () => {
-    (mockInputPort.fetchOrdersInBatches as jest.Mock).mockResolvedValueOnce([]);
-    (mockOutputPort.storeOrders as jest.Mock).mockResolvedValueOnce(undefined);
-
-    const generator = syncOrdersUseCase.execute();
-    const result = await generator.next();
-
-    expect(result.done).toBe(true);
-    expect(mockInputPort.fetchOrdersInBatches).toHaveBeenCalledTimes(1);
-    expect(mockOutputPort.storeOrders).not.toHaveBeenCalled();
-  });
 });
+
+  

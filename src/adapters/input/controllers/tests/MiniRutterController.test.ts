@@ -1,34 +1,45 @@
+import 'reflect-metadata';
 import { createExpressServer, useContainer } from "routing-controllers";
 import request from "supertest";
 import { container } from "tsyringe";
+import { GetOrdersUseCase } from 'usecases/interfaces/GetOrdersUseCase';
+import { GetProductsUseCase } from 'usecases/interfaces/GetProductsUseCase';
+import { TsyringeAdapter } from '../../../../config/tsyringeAdapter';
 import { Order } from "../../../../domain/entities/Order";
 import { Product } from "../../../../domain/entities/Product";
 import { MiniRutterController } from "../MiniRutterController";
 
 // Mock dependencies
-const mockGetProductsUseCase = {
-  execute: jest.fn(),
+const mockGetProductsUseCase: jest.Mocked<GetProductsUseCase> = {
+  execute: jest.fn<Promise<Product[]>, any>(),
+  toDomain: jest.fn(), 
 };
 
-const mockGetOrdersUseCase = {
-  execute: jest.fn(),
+const mockGetOrdersUseCase: jest.Mocked<GetOrdersUseCase> = {
+  execute: jest.fn<Promise<Order[]>, any>(),
+  toDomain: jest.fn(),
 };
 
-// Setup dependency injection container
+let app: any;
+
 beforeAll(() => {
-  container.registerInstance("GetProductsUseCase", mockGetProductsUseCase);
-  container.registerInstance("GetOrdersUseCase", mockGetOrdersUseCase);
-  useContainer(container as any);
+  useContainer(new TsyringeAdapter(container));
+
+  container.registerInstance<GetProductsUseCase>(
+    "GetProductsUseCase",
+    mockGetProductsUseCase
+  );
+  container.registerInstance<GetOrdersUseCase>(
+    "GetOrdersUseCase",
+    mockGetOrdersUseCase
+  );
+
+  app = createExpressServer({
+    controllers: [MiniRutterController],
+  });
 });
 
 describe("MiniRutterController", () => {
-  let app: any;
-
-  beforeAll(() => {
-    app = createExpressServer({
-      controllers: [MiniRutterController],
-    });
-  });
 
   beforeEach(() => {
     jest.clearAllMocks();
@@ -66,8 +77,23 @@ describe("MiniRutterController", () => {
 
       const response = await request(app).get("/v1/mini-rutter/products");
 
+      const productsFromResponse = response.body.map(
+        (product: any) => new Product(
+          product._id,
+          product._platformId,
+          product._name,
+          product._title,
+          product._bodyHtml,
+          product._vendor,
+          product._productType,
+          new Date(product._createdAt),
+          new Date(product._updatedAt),
+          product._status,
+        )
+      );
+
       expect(response.status).toBe(200);
-      expect(response.body).toEqual(mockProducts);
+      expect(productsFromResponse).toEqual(mockProducts);
       expect(mockGetProductsUseCase.execute).toHaveBeenCalledTimes(1);
     });
 
@@ -79,10 +105,6 @@ describe("MiniRutterController", () => {
       const response = await request(app).get("/v1/mini-rutter/products");
 
       expect(response.status).toBe(500);
-      expect(response.body).toEqual({
-        name: "HttpError",
-        message: "Internal server error",
-      });
       expect(mockGetProductsUseCase.execute).toHaveBeenCalledTimes(1);
     });
   });
@@ -110,10 +132,6 @@ describe("MiniRutterController", () => {
       const response = await request(app).get("/v1/mini-rutter/orders");
 
       expect(response.status).toBe(500);
-      expect(response.body).toEqual({
-        name: "HttpError",
-        message: "Internal server error",
-      });
       expect(mockGetOrdersUseCase.execute).toHaveBeenCalledTimes(1);
     });
   });

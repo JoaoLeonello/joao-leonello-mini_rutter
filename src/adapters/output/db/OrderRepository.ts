@@ -272,12 +272,12 @@ export class OrderRepository implements ShopifyOrdersOutputPort {
   async setupMaps(shopifyOrderBatch: Order[]) {
     // Optimize lookups using one find and map
     const shopifyOrderRepository = AppDataSource.getRepository(ShopifyOrder);
-    let existingOrders = await shopifyOrderRepository.find({
+    const existingOrders = (await shopifyOrderRepository.find({
       where: {
         platform_id: In(shopifyOrderBatch.map((order) => order.platformId)),
       },
       relations: [],
-    });
+    })) || [];
     this.existingOrdersMap = new Map<string, ShopifyOrder>(
       existingOrders
         .filter((order: ShopifyOrder) => order !== undefined)
@@ -286,15 +286,15 @@ export class OrderRepository implements ShopifyOrdersOutputPort {
 
     const shopifyLineItemRepository =
       AppDataSource.getRepository(EntityLineItem);
-    let existingLineItems = await shopifyLineItemRepository.find({
-      where: {
-        platform_id: In(
-          shopifyOrderBatch.map((order) => {
-            return order.lineItems?.map((line_item) => line_item.platformId);
-          }),
-        ),
-      },
-    });
+      const existingLineItems = (await shopifyLineItemRepository.find({
+        where: {
+          platform_id: In(
+            shopifyOrderBatch.flatMap((order) =>
+              order.lineItems?.map((line_item) => line_item.platformId) || [],
+            ),
+          ),
+        },
+      })) || [];
     this.existingLineItemsMap = new Map<string, EntityLineItem>(
       existingLineItems.map((lineItem: EntityLineItem) => [
         String(lineItem.platform_id || "null"),
@@ -302,9 +302,9 @@ export class OrderRepository implements ShopifyOrdersOutputPort {
       ]),
     );
 
-    let productIds = shopifyOrderBatch.map((order) => {
-      return order.lineItems?.map((line_item) => line_item.productId);
-    });
+    let productIds = shopifyOrderBatch.flatMap((order) =>
+      order.lineItems ? order.lineItems.map((line_item) => line_item.productId) : [],
+    );
     const shopifyProductRepository =
       AppDataSource.getRepository(ShopifyProduct);
     const existingProducts = await shopifyProductRepository.find({

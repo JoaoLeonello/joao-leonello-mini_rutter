@@ -12,11 +12,13 @@ export class MiniRutterController {
   constructor(
     @inject("GetProductsUseCase")
     private getProductsUseCase: GetProductsUseCase,
-    @inject("GetOrdersUseCase") private getOrdersUseCase: GetOrdersUseCase,
+    @inject("GetOrdersUseCase") 
+    private getOrdersUseCase: GetOrdersUseCase,
   ) {}
 
   @Get("/products")
   async getProducts(_: Response): Promise<Product[]> {
+    console.log("chegou aqui***********************************")
     try {
       return await this.getProductsUseCase.execute();
     } catch (error) {
