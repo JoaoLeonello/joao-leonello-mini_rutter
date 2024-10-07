@@ -21,7 +21,7 @@ export class GetOrdersUseCaseImpl implements GetOrdersUseCase {
       let filteredOrder = this.filterFields(order, ['_id', '_platform_id', '_line_items']);
   
       // Secons filter line_items fields
-      if (filteredOrder.line_items) {
+      if (filteredOrder.line_items && filteredOrder.line_items.length > 0) {
         let expandedLineItems: any[] = [];
         filteredOrder.line_items.forEach((lineItem: any) => {
           // Remove "_" from properties
@@ -35,6 +35,9 @@ export class GetOrdersUseCaseImpl implements GetOrdersUseCase {
           }
         });
         filteredOrder.line_items = expandedLineItems;
+      } else {
+        // If no line_items, return an array with product_id: null
+        filteredOrder.line_items = [{ product_id: null }];
       }
 
       return filteredOrder;
