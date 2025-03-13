@@ -1,6 +1,6 @@
 # Mini Rutter
 
-This project was developed for a job application, but after I delivered the test on time the company ghosted me (https://www.rutter.com/) :). It utilizes separation of concerns, ports and adapters architecture, and is fully containerized with Docker to allow easy setup from scratch.
+This project was developed for a job application, :). It utilizes separation of concerns, ports and adapters architecture, and is fully containerized with Docker to allow easy setup from scratch.
 
 
 ## Requirements
